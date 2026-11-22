@@ -1,0 +1,698 @@
+[
+  {
+    "id": "x-d5-01",
+    "objective": "LLM Fundamentals",
+    "q": "A teammate says only the user's message text counts toward the context window. Which correction is accurate?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Only the system prompt and user messages count; tools are free"
+      },
+      {
+        "id": "b",
+        "text": "Prompt, history, tool definitions, tool results and output all count"
+      },
+      {
+        "id": "c",
+        "text": "Only input counts; the output has its own separate allowance"
+      },
+      {
+        "id": "d",
+        "text": "Only the latest turn counts, because history is summarized"
+      }
+    ],
+    "answer": "b",
+    "explain": "The context window is a fixed per-request budget holding the system prompt, conversation, documents, tool definitions, tool results and the output. Nothing is summarized or dropped automatically; your app manages it."
+  },
+  {
+    "id": "x-d5-02",
+    "objective": "LLM Fundamentals",
+    "q": "A request's input alone is already larger than the model's context window. What happens?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The oldest messages are dropped silently and the call succeeds"
+      },
+      {
+        "id": "b",
+        "text": "A validation error returns before any generation begins"
+      },
+      {
+        "id": "c",
+        "text": "Partial output returns with `model_context_window_exceeded`"
+      },
+      {
+        "id": "d",
+        "text": "The API switches to a model with a larger window for that call"
+      }
+    ],
+    "answer": "b",
+    "explain": "Oversized input fails validation before generation. `model_context_window_exceeded` is the other case: input fits but generation reaches the ceiling, so partial output comes back. Neither case silently truncates."
+  },
+  {
+    "id": "x-d5-03",
+    "objective": "LLM Fundamentals",
+    "q": "Which two statements about sampling and non-determinism are correct? (Choose two.)",
+    "options": [
+      {
+        "id": "a",
+        "text": "The same prompt can return different, equally correct wording"
+      },
+      {
+        "id": "b",
+        "text": "Temperature 0 is more repeatable but not guaranteed identical"
+      },
+      {
+        "id": "c",
+        "text": "Temperature 0 guarantees identical output on every call"
+      },
+      {
+        "id": "d",
+        "text": "The newest models accept any temperature or `top_p` value"
+      },
+      {
+        "id": "e",
+        "text": "Sampling affects only long outputs, not short labels"
+      }
+    ],
+    "answer": [
+      "a",
+      "b"
+    ],
+    "explain": "Each step samples from a probability distribution, so wording varies between identical calls. Lower temperature concentrates the choices but doesn't guarantee identical text, and the newest models reject non-default sampling parameters with a 400."
+  },
+  {
+    "id": "x-d5-04",
+    "objective": "LLM Fundamentals",
+    "q": "On a current model with adaptive thinking, an agent's multi-step plans come out shallow. How should you get deeper reasoning?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Set a larger `budget_tokens` value on the thinking parameter"
+      },
+      {
+        "id": "b",
+        "text": "Raise the effort setting for that step's requests"
+      },
+      {
+        "id": "c",
+        "text": "Raise `temperature` so the model explores more options"
+      },
+      {
+        "id": "d",
+        "text": "Add \"think harder\" to the end of every user message"
+      }
+    ],
+    "answer": "b",
+    "explain": "With adaptive thinking the model decides how much to reason, and you tune depth with effort. `budget_tokens` is deprecated and returns a 400 on the newest generations, and the newest models also reject non-default temperature."
+  },
+  {
+    "id": "x-d5-05",
+    "objective": "Technical Fundamentals",
+    "q": "How do streamed Claude responses arrive at the client?",
+    "options": [
+      {
+        "id": "a",
+        "text": "As server-sent events on the same HTTP connection"
+      },
+      {
+        "id": "b",
+        "text": "As a batch ID that the client polls for each piece"
+      },
+      {
+        "id": "c",
+        "text": "As separate HTTP requests the client sends per token"
+      },
+      {
+        "id": "d",
+        "text": "As one JSON body after the full reply is generated"
+      }
+    ],
+    "answer": "a",
+    "explain": "Streaming sends pieces as they are generated, via server-sent events on the same HTTP connection, and the client reassembles them. Polling by ID describes the Message Batches API."
+  },
+  {
+    "id": "x-d5-06",
+    "objective": "Technical Fundamentals",
+    "q": "A teammate believes switching to `AsyncAnthropic` will give the batch discount for an overnight job. What is the correct distinction?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Async calls are real-time concurrency; Batches are offline and cheaper"
+      },
+      {
+        "id": "b",
+        "text": "Async calls are batched by the SDK, so the discount applies automatically"
+      },
+      {
+        "id": "c",
+        "text": "Batches and the async client are the same API under different names"
+      },
+      {
+        "id": "d",
+        "text": "The async client is cheaper per token but limited to Python projects"
+      }
+    ],
+    "answer": "a",
+    "explain": "The async client gives non-blocking concurrency in real time at normal prices. The Message Batches API submits many requests at once, returns an ID to poll, takes up to 24 hours and costs less per token."
+  },
+  {
+    "id": "x-d5-07",
+    "objective": "Technical Fundamentals",
+    "q": "What does the official SDK add compared with calling Claude's REST endpoint directly?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Access to stronger models that raw HTTP calls cannot reach"
+      },
+      {
+        "id": "b",
+        "text": "Auth, request building, retries and parsing over the same API"
+      },
+      {
+        "id": "c",
+        "text": "A local copy of the model so calls work offline"
+      },
+      {
+        "id": "d",
+        "text": "Automatic batching of calls to lower the per-token price"
+      }
+    ],
+    "answer": "b",
+    "explain": "The SDKs are a thin layer over the same REST API: they handle authentication, request building, retries and response parsing. Same API, same model."
+  },
+  {
+    "id": "x-d5-08",
+    "objective": "Model Selection and Tradeoffs",
+    "q": "Finance asks you to move all traffic from Sonnet to Haiku to cut costs. What should decide this?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Move now, since Haiku is cheaper and quality is similar"
+      },
+      {
+        "id": "b",
+        "text": "An eval showing the quality drop is acceptable for the task"
+      },
+      {
+        "id": "c",
+        "text": "Move only the longest prompts, which cost the most to run"
+      },
+      {
+        "id": "d",
+        "text": "Keep Sonnet, because changing models is never worth the risk"
+      }
+    ],
+    "answer": "b",
+    "explain": "Start with Sonnet and move down to Haiku only when an eval shows the drop is acceptable, not just to save cost. Moving up to Opus likewise needs eval evidence of a quality miss."
+  },
+  {
+    "id": "x-d5-09",
+    "objective": "Model Selection and Tradeoffs",
+    "q": "On a hard task, Sonnet often needs several retries and long answers, while Opus usually succeeds in one shorter pass. How should you compare cost?",
+    "options": [
+      {
+        "id": "a",
+        "text": "By per-token price alone, so the cheaper model always wins"
+      },
+      {
+        "id": "b",
+        "text": "By total cost per task, including retries and mistakes"
+      },
+      {
+        "id": "c",
+        "text": "By context window size, since bigger windows cost more"
+      },
+      {
+        "id": "d",
+        "text": "By output speed, since faster tokens are always cheaper"
+      }
+    ],
+    "answer": "b",
+    "explain": "A higher tier can be cheaper or faster overall if it needs fewer tokens or retries. Compare the total cost per task, including the cost of a mistake, rather than the per-token rate alone."
+  },
+  {
+    "id": "x-d5-10",
+    "objective": "Cost and Token Management",
+    "q": "You add a cache breakpoint with the default 5-minute TTL to a prompt prefix that is sent about once an hour. Costs go up. Why?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Cached prefixes are billed at the output token rate"
+      },
+      {
+        "id": "b",
+        "text": "Each call pays the write premium, and no read reuses it"
+      },
+      {
+        "id": "c",
+        "text": "Breakpoints add a fixed fee to every request sent"
+      },
+      {
+        "id": "d",
+        "text": "Caching disables batching discounts on the same prompt"
+      }
+    ],
+    "answer": "b",
+    "explain": "Cache writes cost 1.25× (5-minute TTL) or 2× (1-hour TTL), and reads cost 0.1×. Caching pays only when reads outnumber writes within the TTL. Here the cache expires before reuse, so every call pays to write."
+  },
+  {
+    "id": "x-d5-11",
+    "objective": "Cost and Token Management",
+    "q": "You want to reject oversized requests before they error, without paying for a model run. What should you use?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The `count_tokens` endpoint, with the same body as the call"
+      },
+      {
+        "id": "b",
+        "text": "A word count of the prompt multiplied by a fixed ratio"
+      },
+      {
+        "id": "c",
+        "text": "A real request with `max_tokens: 1` to measure the input"
+      },
+      {
+        "id": "d",
+        "text": "The usage fields of the previous day's responses"
+      }
+    ],
+    "answer": "a",
+    "explain": "`count_tokens` takes the same body as a messages call and runs no inference, so you can gate oversized requests before they fail. Word counts are unreliable because chars per token depend on the tokenizer."
+  },
+  {
+    "id": "x-d5-12",
+    "objective": "Cost and Token Management",
+    "q": "Your monthly bill doubled and nobody knows which part of the agent caused it. What should have been instrumented from day one?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Per-call input and output tokens, latency and error rate"
+      },
+      {
+        "id": "b",
+        "text": "Only the monthly invoice total from the billing console"
+      },
+      {
+        "id": "c",
+        "text": "The final answer text of every user-facing response"
+      },
+      {
+        "id": "d",
+        "text": "The number of active users per day of the month"
+      }
+    ],
+    "answer": "a",
+    "explain": "Observability means three metrics per call: token usage (input and output), latency and error rate. Per-call data often shows one step driving about 90% of the spend, which a monthly total hides."
+  },
+  {
+    "id": "x-d5-13",
+    "objective": "Cost and Token Management",
+    "q": "You mark a 600-token system prompt with `cache_control`, but the cache never registers a hit. What is the most likely reason?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Caching must be enabled with a global account setting first"
+      },
+      {
+        "id": "b",
+        "text": "The prefix is below the minimum cacheable length"
+      },
+      {
+        "id": "c",
+        "text": "System prompts can't be cached, only tool definitions"
+      },
+      {
+        "id": "d",
+        "text": "A breakpoint must be placed on every message in the request"
+      }
+    ],
+    "answer": "b",
+    "explain": "Prompts shorter than the model's minimum (about 1,024 tokens on most current models) are not cached. There's no account-level switch: you enable caching per request, with breakpoints or the automatic top-level flag. System prompts and tool definitions are both good things to cache."
+  },
+  {
+    "id": "x-d5-14",
+    "objective": "LLM Fundamentals",
+    "q": "Which combination does the course suggest for the hardest multi-step reasoning tasks?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A capable model with a higher effort setting"
+      },
+      {
+        "id": "b",
+        "text": "A smaller model with a higher effort setting"
+      },
+      {
+        "id": "c",
+        "text": "A capable model with the lowest effort setting"
+      },
+      {
+        "id": "d",
+        "text": "A smaller model with reasoning turned off"
+      }
+    ],
+    "answer": "a",
+    "explain": "Model choice and reasoning are separate levers. A smaller model with reasoning on spends more tokens thinking, and a capable model with reasoning off is fast and direct. The hardest tasks get a capable model plus higher effort."
+  },
+  {
+    "id": "x-d5-15",
+    "objective": "LLM Fundamentals",
+    "q": "One example fixed the date format in your extraction prompt, but two other edge cases still fail. What is the next step?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Add a few examples covering those edge cases"
+      },
+      {
+        "id": "b",
+        "text": "Remove the example and describe the cases instead"
+      },
+      {
+        "id": "c",
+        "text": "Raise the temperature so the model generalizes"
+      },
+      {
+        "id": "d",
+        "text": "Switch to the largest model with no examples"
+      }
+    ],
+    "answer": "a",
+    "explain": "Move from one-shot to multi-shot when one example isn't enough to cover the structure or edge cases a description keeps missing. Each example costs tokens on every call, so add only what the eval needs."
+  },
+  {
+    "id": "x-d5-16",
+    "objective": "LLM Fundamentals",
+    "q": "Which two tasks justify enabling extended thinking? (Choose two.)",
+    "options": [
+      {
+        "id": "a",
+        "text": "Multi-hop reasoning across several documents"
+      },
+      {
+        "id": "b",
+        "text": "Planning a sequence of dependent tool actions"
+      },
+      {
+        "id": "c",
+        "text": "Extracting an invoice number from an email"
+      },
+      {
+        "id": "d",
+        "text": "Classifying a review as positive or negative"
+      },
+      {
+        "id": "e",
+        "text": "Converting a CSV row into a JSON object"
+      }
+    ],
+    "answer": [
+      "a",
+      "b"
+    ],
+    "explain": "Thinking earns its cost on multi-step reasoning with several constraints and on agent planning across tool calls. For classification, extraction and format conversion, leave it off and use a bare prompt with an output constraint."
+  },
+  {
+    "id": "x-d5-17",
+    "objective": "LLM Fundamentals",
+    "q": "On one of the newest models, you never set the thinking parameter, yet output token counts are higher than expected because the model reasons before answering. What should you check?",
+    "options": [
+      {
+        "id": "a",
+        "text": "That model's defaults, since some newest models think adaptively by default"
+      },
+      {
+        "id": "b",
+        "text": "Whether the SDK silently adds a thinking parameter to every request"
+      },
+      {
+        "id": "c",
+        "text": "Whether your account was moved onto a reasoning-only billing plan"
+      },
+      {
+        "id": "d",
+        "text": "Whether the API key was created with thinking switched on"
+      }
+    ],
+    "answer": "a",
+    "explain": "Per-model defaults differ: some of the newest models think adaptively by default, or always. Confirm each model's defaults rather than assuming reasoning is off. Thinking tokens are billed as output tokens."
+  },
+  {
+    "id": "x-d5-18",
+    "objective": "LLM Fundamentals",
+    "q": "A teammate says extended thinking is switched on for the whole account and applies to every call. What is accurate?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Reasoning is configured per request, apart from model choice"
+      },
+      {
+        "id": "b",
+        "text": "Reasoning is fixed per account and can't be changed by code"
+      },
+      {
+        "id": "c",
+        "text": "Reasoning is a separate model that you call by name"
+      },
+      {
+        "id": "d",
+        "text": "Reasoning is set once per API key when it is created"
+      }
+    ],
+    "answer": "a",
+    "explain": "Reasoning mode is separate from model choice and is set per request. It is not a different model and is not fixed per account."
+  },
+  {
+    "id": "x-d5-19",
+    "objective": "Technical Fundamentals",
+    "q": "A nightly job has 150,000 requests to send through the Message Batches API. What does the course's batch limit mean for this job?",
+    "options": [
+      {
+        "id": "a",
+        "text": "It must be split, since a batch holds up to 100,000 requests or 256 MB"
+      },
+      {
+        "id": "b",
+        "text": "It fits in one batch, since batches have no size limit"
+      },
+      {
+        "id": "c",
+        "text": "It must be split into batches of at most 1,000 requests"
+      },
+      {
+        "id": "d",
+        "text": "It must run as synchronous calls, since batches are small"
+      }
+    ],
+    "answer": "a",
+    "explain": "A batch holds up to 100,000 requests or 256 MB, whichever comes first, so 150,000 requests need more than one batch. Batches are still the right fit for offline bulk work."
+  },
+  {
+    "id": "x-d5-20",
+    "objective": "Technical Fundamentals",
+    "q": "What does submitting a job to the Message Batches API return?",
+    "options": [
+      {
+        "id": "a",
+        "text": "An identifier you poll until the batch completes"
+      },
+      {
+        "id": "b",
+        "text": "A stream of server-sent events, one per request"
+      },
+      {
+        "id": "c",
+        "text": "Every result in the same response, in order"
+      },
+      {
+        "id": "d",
+        "text": "A websocket that pushes each result as it finishes"
+      }
+    ],
+    "answer": "a",
+    "explain": "You submit many requests in one call, get back a batch identifier, and poll for completion. Results then come back in arbitrary order, matched by `custom_id`."
+  },
+  {
+    "id": "x-d5-21",
+    "objective": "Model Selection and Tradeoffs",
+    "q": "You route requests between a default model and a more capable override. What should the per-request routing decision be based on?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A cheap signal such as task type, input length or difficulty"
+      },
+      {
+        "id": "b",
+        "text": "A full call to the most capable model to judge each request"
+      },
+      {
+        "id": "c",
+        "text": "A random split, so both models get a fair share of traffic"
+      },
+      {
+        "id": "d",
+        "text": "The time of day, sending peak-hour traffic to the larger model"
+      }
+    ],
+    "answer": "a",
+    "explain": "Model routing means a default model plus an override chosen on a cheap signal, such as task type, input length or difficulty. If every request has the same shape, skip the router and pin one model. The eval gates model changes."
+  },
+  {
+    "id": "x-d5-22",
+    "objective": "Model Selection and Tradeoffs",
+    "q": "Your team spends weeks tuning caching and batching for a workload on Opus. An eval then shows Sonnet meets the same quality bar. What does the course say about where to start?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Model selection sets the cost baseline; settle it before tuning"
+      },
+      {
+        "id": "b",
+        "text": "Caching and batching matter more than which model runs the work"
+      },
+      {
+        "id": "c",
+        "text": "Keep Opus, since tuning effort already spent should not be wasted"
+      },
+      {
+        "id": "d",
+        "text": "Model choice affects only latency, never the cost of a workload"
+      }
+    ],
+    "answer": "a",
+    "explain": "Model selection sets the cost baseline, and cost management optimizes within it. Start with Sonnet and move tiers only on eval evidence; defaulting to the biggest model is the most common expensive mistake."
+  },
+  {
+    "id": "x-d5-23",
+    "objective": "Model Selection and Tradeoffs",
+    "q": "On complex legal synthesis, Sonnet fails 30% of eval cases while Opus passes. Most other traffic is simple. What should you do?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Move all traffic to Opus to be safe"
+      },
+      {
+        "id": "b",
+        "text": "Route the complex synthesis requests to Opus"
+      },
+      {
+        "id": "c",
+        "text": "Keep Sonnet and add more instructions"
+      },
+      {
+        "id": "d",
+        "text": "Move everything to Haiku to save cost"
+      }
+    ],
+    "answer": "b",
+    "explain": "Move up to Opus only where an eval shows Sonnet misses the bar. With mixed traffic, a default model plus an override for the hard requests keeps cost down."
+  },
+  {
+    "id": "x-d5-24",
+    "objective": "Cost and Token Management",
+    "q": "You want to cache your large tool definitions while the messages change on every turn. Where should the cache breakpoint go?",
+    "options": [
+      {
+        "id": "a",
+        "text": "After the tools, since the order is tools → system → messages"
+      },
+      {
+        "id": "b",
+        "text": "On the newest user message, so the latest turn is cached"
+      },
+      {
+        "id": "c",
+        "text": "Before the tools, so the cache stays as small as possible"
+      },
+      {
+        "id": "d",
+        "text": "On every message, so each turn is cached on its own"
+      }
+    ],
+    "answer": "a",
+    "explain": "The cache covers everything up to and including the breakpoint, in the order tools → system → messages. A breakpoint after the tools caches their definitions while messages stay dynamic. You can set up to four breakpoints."
+  },
+  {
+    "id": "x-d5-25",
+    "objective": "Cost and Token Management",
+    "q": "You cache a system prompt that includes a price list, and the prices change during the day. What tradeoff does the course warn about?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A staleness window while the cached prefix holds old data"
+      },
+      {
+        "id": "b",
+        "text": "Cached prompts cannot include tool definitions"
+      },
+      {
+        "id": "c",
+        "text": "Caching disables streaming for the cached requests"
+      },
+      {
+        "id": "d",
+        "text": "Cached prefixes can only be used with the batch API"
+      }
+    ],
+    "answer": "a",
+    "explain": "Caching reuses a stable prefix, so if the prefix reflects changing data there is a staleness window. Changing anything before the breakpoint also invalidates the cache."
+  },
+  {
+    "id": "x-d5-26",
+    "objective": "Cost and Token Management",
+    "q": "Your instrumentation wrapper should log the tokens each call used. Where does that number come from?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The response's usage fields for input and output tokens"
+      },
+      {
+        "id": "b",
+        "text": "The character count of the prompt divided by four"
+      },
+      {
+        "id": "c",
+        "text": "The monthly invoice, spread evenly across calls"
+      },
+      {
+        "id": "d",
+        "text": "The `count_tokens` endpoint, called after each reply"
+      }
+    ],
+    "answer": "a",
+    "explain": "A thin wrapper logs `usage.input_tokens`, `usage.output_tokens` and latency from each response. Character ratios are unreliable because chars per token depend on the tokenizer."
+  },
+  {
+    "id": "x-d5-27",
+    "objective": "Cost and Token Management",
+    "q": "Which two conditions make prompt caching pay off? (Choose two.)",
+    "options": [
+      {
+        "id": "a",
+        "text": "Reads of the cache outnumber writes within the TTL"
+      },
+      {
+        "id": "b",
+        "text": "The prefix stays identical from request to request"
+      },
+      {
+        "id": "c",
+        "text": "The prefix changes slightly on every single request"
+      },
+      {
+        "id": "d",
+        "text": "Responses are streamed instead of returned at once"
+      },
+      {
+        "id": "e",
+        "text": "Requests use a larger model tier than they need"
+      }
+    ],
+    "answer": [
+      "a",
+      "b"
+    ],
+    "explain": "Writes cost more than normal input and reads cost far less, so caching pays only when reads outnumber writes. It also needs an identical prefix, reuse within the TTL and the minimum length."
+  }
+]

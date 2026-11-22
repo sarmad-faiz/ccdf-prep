@@ -1,0 +1,502 @@
+[
+  {
+    "id": "m3-01",
+    "topic": "Permission modes",
+    "q": "Your organization's `managed-settings.json` denies edits to `.env*` files. In one repo, your `.claude/settings.local.json` adds an allow rule for editing `.env.local`, and you start the session in `bypassPermissions`. What happens when Claude tries to edit `.env.local`?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The edit runs, because the local settings file is the most specific scope"
+      },
+      {
+        "id": "b",
+        "text": "The edit is blocked, because the enterprise deny beats any allow and any mode"
+      },
+      {
+        "id": "c",
+        "text": "The edit runs, because `bypassPermissions` skips every allow and deny rule"
+      },
+      {
+        "id": "d",
+        "text": "Claude Code prompts you, because conflicting rules fall back to asking"
+      }
+    ],
+    "answer": "b",
+    "explain": "A deny rule always wins over an allow rule, and an enterprise-level deny cannot be overridden by users or project files. It still applies when a bypass mode is set. Local settings are personal overrides, but they sit below managed settings."
+  },
+  {
+    "id": "m3-02",
+    "topic": "Permission modes",
+    "q": "You want Claude Code to auto-approve `Bash(make:*)` in one repo, for yourself only. Teammates who clone the repo should not get the rule. Where should it go?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`~/.claude/settings.json` in your home directory"
+      },
+      {
+        "id": "b",
+        "text": "`.claude/settings.json` committed in the repo"
+      },
+      {
+        "id": "c",
+        "text": "`managed-settings.json` set by your administrator"
+      },
+      {
+        "id": "d",
+        "text": "`.claude/settings.local.json` in the repo"
+      }
+    ],
+    "answer": "d",
+    "explain": "`.claude/settings.local.json` holds personal overrides for one project, and it is git-ignored automatically. `~/.claude/settings.json` is also personal, but it applies to every project on the machine, not just this one."
+  },
+  {
+    "id": "m3-03",
+    "topic": "Permission modes",
+    "q": "You're asked to modernise an unfamiliar legacy billing service. You want Claude Code to read the code, trace the logic and propose changes, with no file edits or shell commands until you approve. Which permission mode fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`plan`"
+      },
+      {
+        "id": "b",
+        "text": "`acceptEdits`"
+      },
+      {
+        "id": "c",
+        "text": "`auto`"
+      },
+      {
+        "id": "d",
+        "text": "`default`"
+      }
+    ],
+    "answer": "a",
+    "explain": "Plan mode holds Claude Code in the explore phase and blocks all file edits and shell commands until you release it. That makes it the right default for unfamiliar or high-stakes codebases. `default` still lets actions through once you confirm each one; it does not hold the agent in a read-only phase."
+  },
+  {
+    "id": "m3-04",
+    "topic": "Permission modes",
+    "q": "You are in `acceptEdits` mode. Claude decides to delete three stale files inside the working directory by issuing `rm` commands directly. What happens?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Claude Code prompts, because `acceptEdits` approves file edits but not shell commands"
+      },
+      {
+        "id": "b",
+        "text": "Claude Code prompts, because every mode except `bypassPermissions` gates deletions"
+      },
+      {
+        "id": "c",
+        "text": "They run unprompted, since `acceptEdits` approves common filesystem commands there"
+      },
+      {
+        "id": "d",
+        "text": "They are blocked outright unless a matching `Bash(rm:*)` allow rule exists"
+      }
+    ],
+    "answer": "c",
+    "explain": "`acceptEdits` auto-approves common filesystem commands, including `rm` on paths inside the working directory. Only `default` mode prompts for those. To stop deletions, use `default` mode or add a deny rule such as `Bash(rm:*)`."
+  },
+  {
+    "id": "m3-05",
+    "topic": "Permission modes",
+    "q": "A Claude-powered bot reviews pull requests and can approve merges. Your team has marked the authentication module as sensitive code. How should the review gate be placed for changes to that module?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The bot may approve the merge when its own review reports high confidence"
+      },
+      {
+        "id": "b",
+        "text": "A person reviews before merge, and the bot's review is an input to that decision"
+      },
+      {
+        "id": "c",
+        "text": "A second automated review runs, and the change merges if both reviews agree"
+      },
+      {
+        "id": "d",
+        "text": "The bot approves the merge, and a person audits the change in the next sprint"
+      }
+    ],
+    "answer": "b",
+    "explain": "On code the team has marked sensitive, the agent must never be the only gate. A person reviews the change before it merges, however confident the agent's review sounds. Reviewing after the merge puts the gate too late for a change that is costly to undo."
+  },
+  {
+    "id": "m3-06",
+    "topic": "Project context",
+    "q": "You must guarantee that Claude Code never reads `secrets/prod.yaml`, whatever the model decides. You write a hook script that inspects each tool call. Which event and behaviour enforce this?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`PostToolUse`, exiting with code 1 and logging the read to an audit file"
+      },
+      {
+        "id": "b",
+        "text": "`UserPromptSubmit`, rejecting any prompt that mentions the file's path"
+      },
+      {
+        "id": "c",
+        "text": "`PreToolUse`, exiting with code 2 and writing the reason to stderr"
+      },
+      {
+        "id": "d",
+        "text": "`SessionStart`, removing read access to the file for the whole session"
+      }
+    ],
+    "answer": "c",
+    "explain": "A `PreToolUse` hook runs before the tool call executes. Exiting with code 2 blocks the call, and the stderr message goes back to the agent as feedback. `PostToolUse` runs after the call has already happened, so it cannot block the read."
+  },
+  {
+    "id": "m3-07",
+    "topic": "Project context",
+    "q": "Your CLAUDE.md says \"run Prettier after every file edit\", but Claude occasionally skips it. What is the most reliable fix?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Move the instruction to the top of CLAUDE.md so it carries more weight"
+      },
+      {
+        "id": "b",
+        "text": "Put the instruction in a path-scoped rules file covering source files"
+      },
+      {
+        "id": "c",
+        "text": "Add a `PreToolUse` hook on edit tools that runs Prettier"
+      },
+      {
+        "id": "d",
+        "text": "Add a `PostToolUse` hook on edit tools that runs Prettier"
+      }
+    ],
+    "answer": "d",
+    "explain": "A hook runs every time, whatever the model decides, while a CLAUDE.md instruction is followed only most of the time. `PostToolUse` runs after the edit completes, which makes it the place for side effects like formatting. A `PreToolUse` hook would run before the edit had happened."
+  },
+  {
+    "id": "m3-08",
+    "topic": "Project context",
+    "q": "You add `.claude/rules/database/transactions.md` with SQL transaction guidance and no frontmatter. Later you notice the guidance is in context even in sessions that only touch frontend code. Why?",
+    "options": [
+      {
+        "id": "a",
+        "text": "With no `paths` field, the rule loads unconditionally at launch, whatever its folder"
+      },
+      {
+        "id": "b",
+        "text": "Rules files always load at launch, and `paths` scoping applies only to CLAUDE.md"
+      },
+      {
+        "id": "c",
+        "text": "The `database/` folder name is matched against the session's working directory"
+      },
+      {
+        "id": "d",
+        "text": "Rules files in subdirectories pick up their scope only after `/init` is run again"
+      }
+    ],
+    "answer": "a",
+    "explain": "Scoping comes from a `paths` glob in the rule's YAML frontmatter, not from where the file sits. Subdirectories of `.claude/rules/` are for organisation only. A rule with no `paths` field loads at launch with the same priority as CLAUDE.md."
+  },
+  {
+    "id": "m3-09",
+    "topic": "Project context",
+    "q": "You delegate a research task to the built-in Explore subagent, and its output ignores a convention defined in your CLAUDE.md. What is the most likely cause, and what is the fix?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Subagents read CLAUDE.md only after their first tool call; add a hook to load it"
+      },
+      {
+        "id": "b",
+        "text": "Explore skips CLAUDE.md to stay fast; use general-purpose or a custom subagent"
+      },
+      {
+        "id": "c",
+        "text": "CLAUDE.md is too long for a subagent; split it into several rules files"
+      },
+      {
+        "id": "d",
+        "text": "Explore loads CLAUDE.md but drops conventions; repeat them in a skill"
+      }
+    ],
+    "answer": "b",
+    "explain": "The built-in Explore and Plan subagents skip CLAUDE.md and git status to keep research fast and cheap. The general-purpose subagent loads both. When project rules must be respected, use it or a custom subagent that loads the rules it needs."
+  },
+  {
+    "id": "m3-10",
+    "topic": "Project context",
+    "q": "Your CLAUDE.md has grown past 800 lines. It now holds a historical decisions log, archived notes and a path restriction, and Claude recently broke the path restriction even though it was in the file. Which change best follows the course's guidance?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Bold the path restriction and repeat it at the top and bottom of the file"
+      },
+      {
+        "id": "b",
+        "text": "Move the entire file into a skill so it loads only when Claude needs it"
+      },
+      {
+        "id": "c",
+        "text": "Move history to a reference doc and back the key restriction with a hook"
+      },
+      {
+        "id": "d",
+        "text": "Run `/init` again so the file is regenerated from the current codebase"
+      }
+    ],
+    "answer": "c",
+    "explain": "The failure is dilution: every extra line lowers the weight of the rule that matters. Keep CLAUDE.md to session-critical rules, move historical context into a document the agent reads on demand, and enforce the critical restriction with a hook. Repeating the rule still leaves it diluted, and nothing enforces it."
+  },
+  {
+    "id": "m3-11",
+    "topic": "Packaging workflows",
+    "q": "Your plugin bundles `scripts/check.sh`, and a hook in the plugin calls it at `/Users/you/plugins/deploy/scripts/check.sh`. Teammates install the plugin without errors, but the hook fails on their machines. What should the hook reference instead?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`~/plugins/deploy/scripts/check.sh`, so it resolves in each user's home"
+      },
+      {
+        "id": "b",
+        "text": "An absolute path on a shared network drive that every teammate mounts"
+      },
+      {
+        "id": "c",
+        "text": "`$CLAUDE_PROJECT_DIR/scripts/check.sh`, since hooks run from the project"
+      },
+      {
+        "id": "d",
+        "text": "`${CLAUDE_PLUGIN_ROOT}/scripts/check.sh`, since it ships in the plugin"
+      }
+    ],
+    "answer": "d",
+    "explain": "Use `${CLAUDE_PLUGIN_ROOT}` for scripts bundled inside the plugin. The path then resolves on any machine, from any starting directory. `$CLAUDE_PROJECT_DIR` is for scripts stored in the project, and this script ships with the plugin."
+  },
+  {
+    "id": "m3-12",
+    "topic": "Packaging workflows",
+    "q": "A SKILL.md shells out to a local `lint-check` binary and works in Claude Code. You load the same skill through the Messages API, and it fails at that step. Why?",
+    "options": [
+      {
+        "id": "a",
+        "text": "On the API it runs in a container where the local command doesn't exist"
+      },
+      {
+        "id": "b",
+        "text": "The Messages API ignores a skill's body and uses only its description"
+      },
+      {
+        "id": "c",
+        "text": "API skills need `settingSources` set before their steps can run commands"
+      },
+      {
+        "id": "d",
+        "text": "The API's permission mode blocks shell commands unless an allow rule is sent"
+      }
+    ],
+    "answer": "a",
+    "explain": "On the Messages API, a skill runs in a code-execution container, not in your terminal, so local tools are not there. Portable skills keep their steps to what the runtime is guaranteed to provide. `settingSources` belongs to the Agent SDK, where it enables loading skills from the filesystem."
+  },
+  {
+    "id": "m3-13",
+    "topic": "Packaging workflows",
+    "q": "Your admin adds your internal plugin marketplace to the managed marketplace allowlist, but developers still don't see it until each one runs `/plugin marketplace add`. What else is needed to push the marketplace to everyone?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Nothing; the allowlist registers the marketplace when users next restart"
+      },
+      {
+        "id": "b",
+        "text": "Add the marketplace to each repo's committed `.claude/settings.json`"
+      },
+      {
+        "id": "c",
+        "text": "Pair the allowlist with `extraKnownMarketplaces` in managed settings"
+      },
+      {
+        "id": "d",
+        "text": "Set `disable-model-invocation: true` on every skill in the marketplace"
+      }
+    ],
+    "answer": "c",
+    "explain": "The managed allowlist only limits which marketplace sources users may add; it does not register any. To push a marketplace to every user, pair it with `extraKnownMarketplaces` in managed settings, which also keeps the deployment above user and project settings."
+  },
+  {
+    "id": "m3-14",
+    "topic": "MCP servers",
+    "q": "Your company hosts a code-search MCP service on its own infrastructure. Every engineer should get it automatically when they clone the repo. Which transport and scope fit?",
+    "options": [
+      {
+        "id": "a",
+        "text": "stdio transport, project scope in `.mcp.json`"
+      },
+      {
+        "id": "b",
+        "text": "HTTP transport, local scope in `~/.claude.json`"
+      },
+      {
+        "id": "c",
+        "text": "HTTP transport, user scope in personal settings"
+      },
+      {
+        "id": "d",
+        "text": "HTTP transport, project scope in `.mcp.json`"
+      }
+    ],
+    "answer": "d",
+    "explain": "A remotely hosted server that the team shares needs HTTP transport, and a committed `.mcp.json` (project scope) gives every clone the same server. stdio launches a local subprocess on each machine, so it does not fit a centrally hosted service. Local and user scope are personal."
+  },
+  {
+    "id": "m3-15",
+    "topic": "MCP servers",
+    "q": "You connect the GitHub MCP server. You want its `create_issue` tool to run without a prompt, while every other GitHub tool keeps prompting. What do you add?",
+    "options": [
+      {
+        "id": "a",
+        "text": "An allow rule for `mcp__github`"
+      },
+      {
+        "id": "b",
+        "text": "An allow rule for `mcp__github__create_issue`"
+      },
+      {
+        "id": "c",
+        "text": "A deny on `mcp__github` and an allow on `create_issue`"
+      },
+      {
+        "id": "d",
+        "text": "`defaultMode` set to `acceptEdits` for the server"
+      }
+    ],
+    "answer": "b",
+    "explain": "Permission rules can target a single MCP tool as `mcp__server__tool`, so allowing only `mcp__github__create_issue` leaves the server's other tools prompting. Allowing the whole server goes too far. Denying the server would block `create_issue` too, because a deny rule always beats an allow."
+  },
+  {
+    "id": "m3-16",
+    "topic": "MCP servers",
+    "q": "An agent sends the same 20,000-token system prompt and tool definitions at each step, but it pauses 15 to 30 minutes between steps. You added a `cache_control` breakpoint, yet every step pays the cache write again. What should you change?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Move the breakpoint to the end of the latest user message"
+      },
+      {
+        "id": "b",
+        "text": "Add more breakpoints, up to the maximum of four per request"
+      },
+      {
+        "id": "c",
+        "text": "Set a `ttl` of `1h` on the cache breakpoint"
+      },
+      {
+        "id": "d",
+        "text": "Turn on caching globally in the client configuration"
+      }
+    ],
+    "answer": "c",
+    "explain": "The default cache lifetime is five minutes from the last read, so it expires during the long pauses. A `ttl` of `1h` covers workloads with longer gaps between requests. There is no global switch for caching; you turn it on by placing breakpoints."
+  },
+  {
+    "id": "m3-17",
+    "topic": "MCP servers",
+    "q": "Your support assistant uses classical RAG over a policy library. Sometimes it answers without the policy that applies, and many of the files have names like `notes_final_v3.pdf`. Which statement matches the course?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Misses mean the library is too large, so load every document into context"
+      },
+      {
+        "id": "b",
+        "text": "The model sees only what retrieval returns, so clear names and grouping help"
+      },
+      {
+        "id": "c",
+        "text": "The model can still reason about any policy in the index, even a missed one"
+      },
+      {
+        "id": "d",
+        "text": "Classical RAG cost grows with library size, so switch to agentic search"
+      }
+    ],
+    "answer": "b",
+    "explain": "Retrieval is only as good as what it finds. If the retrieval step misses a document, the model never sees it, and descriptive file names and grouping related files make documents easier to surface. Per-request cost stays roughly flat as the library grows, so library size is not the problem."
+  },
+  {
+    "id": "m3-18",
+    "topic": "Enterprise integration",
+    "q": "An OAuth-authenticated MCP integration passed every staging test. After cutover, every production sign-in fails with a redirect URI mismatch and loops back to the sign-in screen. What is the cause?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The production host's redirect URI was never registered with the OAuth app"
+      },
+      {
+        "id": "b",
+        "text": "The staging OAuth token expired and had to be rotated before the cutover"
+      },
+      {
+        "id": "c",
+        "text": "Production MCP servers require an API key header rather than OAuth"
+      },
+      {
+        "id": "d",
+        "text": "The production `.mcp.json` must use stdio transport for sign-in to finish"
+      }
+    ],
+    "answer": "a",
+    "explain": "OAuth redirect URIs are registered per host, so a working staging connection says nothing about production. Add the production host's redirect URI to the app registration, and check whether the customer requires a separate app registration for each environment. It is a configuration step, not a code or token defect."
+  },
+  {
+    "id": "m3-19",
+    "topic": "Enterprise integration",
+    "q": "Four services across two teams need the same service-account credential for an internal MCP server, and compliance wants a record of who reads it. Where should the value live?",
+    "options": [
+      {
+        "id": "a",
+        "text": "In an environment variable set in each service's shell profile"
+      },
+      {
+        "id": "b",
+        "text": "Inline in `.mcp.json`, with the repository kept private"
+      },
+      {
+        "id": "c",
+        "text": "In a git-ignored credentials file copied to each machine"
+      },
+      {
+        "id": "d",
+        "text": "In a secret store that returns it at runtime and logs reads"
+      }
+    ],
+    "answer": "d",
+    "explain": "A secret store fits when a secret is shared or must be audited. It keeps one copy, so a single rotation updates every consumer, and it records who read what. An environment variable suits a secret that is local and short-lived, but copies on every machine have no audit trail."
+  },
+  {
+    "id": "m3-20",
+    "topic": "Enterprise integration",
+    "q": "A teammate committed `.mcp.json` with a bearer token inline. In a follow-up commit they replaced the value with `${WAREHOUSE_MCP_TOKEN}`. What else must happen?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Rotate the token, because it stays in history and must be treated as compromised"
+      },
+      {
+        "id": "b",
+        "text": "Nothing more, because the follow-up commit removes the token from the repository"
+      },
+      {
+        "id": "c",
+        "text": "Add `.mcp.json` to `.gitignore` so the earlier version is no longer shared"
+      },
+      {
+        "id": "d",
+        "text": "Rename the environment variable so the old token no longer resolves anywhere"
+      }
+    ],
+    "answer": "a",
+    "explain": "Overwriting the file removes the token only from the current version; it stays in repository history and in every clone. Treat any credential committed inline as compromised and rotate it, because an exposed key cannot be made secret again."
+  }
+]

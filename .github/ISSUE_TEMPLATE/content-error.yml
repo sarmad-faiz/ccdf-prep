@@ -1,0 +1,30 @@
+name: Content error
+description: A wrong answer, an ambiguous question, an outdated fact or a typo in the notes
+labels: [content]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Question id or notes page
+      description: The id is shown in the "Report this question" dialog (for example x-d8-03), or give the notes URL and section.
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What's wrong?
+      options:
+        - The marked answer is wrong
+        - More than one answer could be right
+        - It's out of date
+        - Typo or unclear wording
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Explain the problem and point to the course module/section that supports the fix. Please don't paste course or exam text.
+    validations:
+      required: true

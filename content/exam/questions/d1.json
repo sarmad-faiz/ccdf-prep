@@ -1,0 +1,616 @@
+[
+  {
+    "id": "x-d1-01",
+    "objective": "Agent Architecture",
+    "q": "Refund requests vary widely. Some need an order lookup, some a policy search, some a shipping check, in no predictable order. The tools are known, but the path for any one request is not. Which approach fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A workflow that always runs all three tools in a fixed sequence"
+      },
+      {
+        "id": "b",
+        "text": "An agent, because the goal and tools are known but the path is not"
+      },
+      {
+        "id": "c",
+        "text": "A single API call with every order, policy and shipment preloaded"
+      },
+      {
+        "id": "d",
+        "text": "Three separate workflows whose outputs a script merges at the end"
+      }
+    ],
+    "answer": "b",
+    "explain": "Choose an agent when the goal and tools are known but the path cannot be listed in advance. A fixed workflow would run unneeded steps, and preloading everything wastes context. Use a workflow only when the exact steps can be written in code."
+  },
+  {
+    "id": "x-d1-02",
+    "objective": "Agent Architecture",
+    "q": "You need a report that compares six vendors, and each vendor's documentation can be researched on its own. A single agent is slow and its context fills up. What architecture does the course recommend for this?",
+    "options": [
+      {
+        "id": "a",
+        "text": "One agent with a larger context window that reads all six in turn"
+      },
+      {
+        "id": "b",
+        "text": "A lead agent that runs parallel subagents and synthesizes results"
+      },
+      {
+        "id": "c",
+        "text": "A fixed workflow that concatenates all six documents into one prompt"
+      },
+      {
+        "id": "d",
+        "text": "Six separate chats whose answers a person pastes into one document"
+      }
+    ],
+    "answer": "b",
+    "explain": "Independent research across sources is the orchestrator-worker sweet spot: each subagent works in its own context and the lead combines the results. It costs far more tokens (about 15× a normal chat), so it pays off only on independent work, not tightly coupled tasks."
+  },
+  {
+    "id": "x-d1-03",
+    "objective": "Agent Construction with Claude",
+    "q": "Your agent finishes its task but keeps calling tools until it hits the maximum turn count. What should you change?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Add a line to the system prompt asking Claude to stop when it is done"
+      },
+      {
+        "id": "b",
+        "text": "Raise `max_tokens` so Claude has room to write its final answer"
+      },
+      {
+        "id": "c",
+        "text": "Define an exit condition in the loop that doesn't rely on Claude stopping"
+      },
+      {
+        "id": "d",
+        "text": "Register more tools so Claude can finish the task in fewer turns"
+      }
+    ],
+    "answer": "c",
+    "explain": "Every agent loop needs an explicit exit condition. An exit that depends on Claude volunteering to stop is unreliable, and without one the agent keeps calling tools. Prompt wording and token limits do not define when the loop ends."
+  },
+  {
+    "id": "x-d1-04",
+    "objective": "Agent Construction with Claude",
+    "q": "Your team wants Anthropic to run the agent loop and a sandbox for tasks that take an hour or more. There are no ZDR or HIPAA requirements. Which wiring path fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Claude Managed Agents, defined as a versioned API resource"
+      },
+      {
+        "id": "b",
+        "text": "A raw Messages API loop that your service runs and monitors"
+      },
+      {
+        "id": "c",
+        "text": "The Agent SDK running inside your own application process"
+      },
+      {
+        "id": "d",
+        "text": "The Message Batches API, polling each task until it completes"
+      }
+    ],
+    "answer": "a",
+    "explain": "Managed Agents is the path where Anthropic runs the loop and the sandbox, which suits long runs. Its sessions are stored server-side, which is why it is ruled out when ZDR or a HIPAA BAA applies. With neither constraint here, it fits."
+  },
+  {
+    "id": "x-d1-05",
+    "objective": "Agent Patterns and Frameworks",
+    "q": "An agent was given 40 tools on day one. As tools were added, it picked the wrong one more and more often. What does the course recommend?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Move to a larger model so it can tell all 40 tools apart"
+      },
+      {
+        "id": "b",
+        "text": "List every tool and its purpose again in the system prompt"
+      },
+      {
+        "id": "c",
+        "text": "Start with a minimal toolset and add tools only for confirmed gaps"
+      },
+      {
+        "id": "d",
+        "text": "Raise `max_tokens` so Claude has room to weigh more tools"
+      }
+    ],
+    "answer": "c",
+    "explain": "Over-tooling is the more common failure: tool selection degrades as the tool surface grows. Start minimal and add a tool only when a gap is confirmed. A bigger model or a longer prompt doesn't remove the overlap."
+  },
+  {
+    "id": "x-d1-06",
+    "objective": "Agent Construction with Claude",
+    "q": "You are reviewing an agent before launch. Which two items belong on the course's wiring checklist? (Choose two.)",
+    "options": [
+      {
+        "id": "a",
+        "text": "Every tool the agent references is actually registered"
+      },
+      {
+        "id": "b",
+        "text": "At least one human-in-the-loop checkpoint in the loop"
+      },
+      {
+        "id": "c",
+        "text": "The loop ends when Claude says in its reply that it is done"
+      },
+      {
+        "id": "d",
+        "text": "Every available tool is registered up front, just in case"
+      },
+      {
+        "id": "e",
+        "text": "A broad system prompt that covers any task users might ask"
+      }
+    ],
+    "answer": [
+      "a",
+      "b"
+    ],
+    "explain": "The checklist includes registered tools, a scoped system prompt, every `tool_use` answered before the next assistant turn, at least one HITL point, and an exit condition that doesn't depend on Claude volunteering to stop. Registering everything and broad prompts both make routing worse."
+  },
+  {
+    "id": "x-d1-07",
+    "objective": "Agent Patterns and Frameworks",
+    "q": "You hand a log-analysis subtask to a subagent. What should the handoff include?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The full parent conversation, so it has every detail it might need"
+      },
+      {
+        "id": "b",
+        "text": "The scoped task, relevant prior results, needed tools and exit conditions"
+      },
+      {
+        "id": "c",
+        "text": "Every tool and skill the parent has, so it can handle any surprise"
+      },
+      {
+        "id": "d",
+        "text": "Only the task name, since the subagent can rediscover the context"
+      }
+    ],
+    "answer": "b",
+    "explain": "A subagent should get a scoped task, the minimum context, only the directly relevant prior results, the tools it needs and clear exit conditions. Passing the whole history defeats the point of isolating its context."
+  },
+  {
+    "id": "x-d1-08",
+    "objective": "Agent Patterns and Frameworks",
+    "q": "A nightly job classifies each record on its own. Nothing from one run is needed in the next. Which memory scope fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "External storage, read at the start of every run"
+      },
+      {
+        "id": "b",
+        "text": "Summarized history injected into the next run"
+      },
+      {
+        "id": "c",
+        "text": "Stateless, with nothing carried between runs"
+      },
+      {
+        "id": "d",
+        "text": "In-context memory kept for the whole night"
+      }
+    ],
+    "answer": "c",
+    "explain": "Self-contained jobs need no memory, so stateless is the right scope and costs nothing. External storage suits state shared across sessions; summaries suit long-running conversational agents."
+  },
+  {
+    "id": "x-d1-09",
+    "objective": "Agent Construction with Claude",
+    "q": "Your team moves from a hand-written Messages API loop to the Agent SDK. Which statement about the Agent SDK is correct?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Anthropic hosts the loop and the sandbox, so nothing runs in your app"
+      },
+      {
+        "id": "b",
+        "text": "It runs the agent loop inside your own application process"
+      },
+      {
+        "id": "c",
+        "text": "It decides when the task is done, so exit conditions are unnecessary"
+      },
+      {
+        "id": "d",
+        "text": "It stores every session on Anthropic's servers for later replay"
+      }
+    ],
+    "answer": "b",
+    "explain": "The Agent SDK runs in your own process and gives the agent loop its structure. Anthropic-hosted loops, a managed sandbox and server-side sessions describe Managed Agents instead. Exit conditions are needed on every wiring path."
+  },
+  {
+    "id": "x-d1-10",
+    "objective": "Agent Architecture",
+    "q": "An agent drafts a 12-step data cleanup plan and then runs it automatically. The steps run fine, but the plans themselves are sometimes wrong. Where should a human checkpoint go?",
+    "options": [
+      {
+        "id": "a",
+        "text": "After each step has run, to confirm it succeeded"
+      },
+      {
+        "id": "b",
+        "text": "After the plan is drafted and before it is executed"
+      },
+      {
+        "id": "c",
+        "text": "Only at the end, comparing final data to the source"
+      },
+      {
+        "id": "d",
+        "text": "Before the agent first reads the data it will clean"
+      }
+    ],
+    "answer": "b",
+    "explain": "The risk is a wrong plan, so the human check belongs after the planning step and before execution. The course lists three insertion points: before destructive calls, after planning, and on unexpected output. Pick by asking what the worst outcome is if the step runs unchecked."
+  },
+  {
+    "id": "x-d1-11",
+    "objective": "Agent Architecture",
+    "q": "A feature turns one support ticket into three summary bullet points. Each ticket is handled the same way, with no tools. Which approach does the course recommend?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A single API call with a clear prompt and output constraint"
+      },
+      {
+        "id": "b",
+        "text": "An agent that decides how to summarize each ticket on its own"
+      },
+      {
+        "id": "c",
+        "text": "A multi-step workflow with a separate call per bullet point"
+      },
+      {
+        "id": "d",
+        "text": "A lead agent with three subagents, one for each bullet point"
+      }
+    ],
+    "answer": "a",
+    "explain": "The progression is single API call → workflow → agent, moving up only when the simpler option can't handle the variability. One fixed transformation with no tools needs a single call."
+  },
+  {
+    "id": "x-d1-12",
+    "objective": "Agent Architecture",
+    "q": "An insurance claims process has five fixed steps. Compliance requires a guardrail at each step and monitoring with your standard tooling. A teammate proposes an agent. What fits better?",
+    "options": [
+      {
+        "id": "a",
+        "text": "An agent, since it can choose the best order for each claim"
+      },
+      {
+        "id": "b",
+        "text": "A workflow, since the steps are known and need step guardrails"
+      },
+      {
+        "id": "c",
+        "text": "An agent with more tools, so it can handle unusual claims"
+      },
+      {
+        "id": "d",
+        "text": "A single API call that processes the whole claim at once"
+      }
+    ],
+    "answer": "b",
+    "explain": "Choose a workflow when the exact steps can be listed in code, errors are costly and need step-level guardrails, and standard-tooling observability is required. Agents need transcript-level tooling because their path emerges from model reasoning."
+  },
+  {
+    "id": "x-d1-13",
+    "objective": "Agent Construction with Claude",
+    "q": "Your team built an agent on the Agent SDK and now wants to run it on Claude Managed Agents. A teammate expects to export it as-is. What should they expect instead?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A one-click export, since both use the same agent format"
+      },
+      {
+        "id": "b",
+        "text": "Re-expressing the agent as a versioned API resource"
+      },
+      {
+        "id": "c",
+        "text": "No changes, because Managed Agents runs SDK code directly"
+      },
+      {
+        "id": "d",
+        "text": "Converting the agent into a Message Batches job first"
+      }
+    ],
+    "answer": "b",
+    "explain": "Moving from the Agent SDK to Managed Agents is a re-expression, not an export. In Managed Agents the agent is a versioned API resource listing its model, system prompt, tools, MCP servers and skills."
+  },
+  {
+    "id": "x-d1-14",
+    "objective": "Agent Construction with Claude",
+    "q": "Your agent runs on Claude Managed Agents. How does your application interact with a running session?",
+    "options": [
+      {
+        "id": "a",
+        "text": "It sends events and streams results back over SSE"
+      },
+      {
+        "id": "b",
+        "text": "It runs the loop itself and calls the model each turn"
+      },
+      {
+        "id": "c",
+        "text": "It submits a batch and polls for the final result"
+      },
+      {
+        "id": "d",
+        "text": "It reads results from a local file the agent writes"
+      }
+    ],
+    "answer": "a",
+    "explain": "With Managed Agents, Anthropic runs the loop and the sandbox. Your application sends events to the session and streams results via server-sent events."
+  },
+  {
+    "id": "x-d1-15",
+    "objective": "Agent Construction with Claude",
+    "q": "Which wiring path gives you full control of the agent loop, along with responsibility for execution, context, retries and exit?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Claude Managed Agents"
+      },
+      {
+        "id": "b",
+        "text": "A raw Messages API loop"
+      },
+      {
+        "id": "c",
+        "text": "The Message Batches API"
+      },
+      {
+        "id": "d",
+        "text": "A Claude Code plugin"
+      }
+    ],
+    "answer": "b",
+    "explain": "With the raw Messages API, your code runs the loop and owns everything: tool execution, context, retries and the exit condition. The Agent SDK provides structure in your process; Managed Agents hands the loop to Anthropic."
+  },
+  {
+    "id": "x-d1-16",
+    "objective": "Agent Architecture",
+    "q": "Mid-run, an inventory tool returns an empty list where hundreds of records are expected. Retrying returns the same thing. What does the course recommend?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Keep retrying with backoff until records appear"
+      },
+      {
+        "id": "b",
+        "text": "Pause for a human check on the unexpected output"
+      },
+      {
+        "id": "c",
+        "text": "Let the agent continue, treating it as zero stock"
+      },
+      {
+        "id": "d",
+        "text": "Switch to a larger model and rerun the whole task"
+      }
+    ],
+    "answer": "b",
+    "explain": "One human-in-the-loop insertion point is on unexpected output, such as an error flag, an empty result or an out-of-bounds value, because a retry won't fix it. Treating the empty list as real data would drive wrong actions."
+  },
+  {
+    "id": "x-d1-17",
+    "objective": "Agent Patterns and Frameworks",
+    "q": "A support agent invents a shipping status for an order. It has tools for orders and refunds, but none that looks up shipments. What is the failure?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Over-tooling: it has too many tools to choose from"
+      },
+      {
+        "id": "b",
+        "text": "Under-tooling: a needed tool is missing, so it guesses"
+      },
+      {
+        "id": "c",
+        "text": "Context overflow: the shipment data was truncated"
+      },
+      {
+        "id": "d",
+        "text": "A sampling issue that temperature 0 would remove"
+      }
+    ],
+    "answer": "b",
+    "explain": "Under-tooling shows up as a hallucinated path or an incomplete result. Over-tooling is more common, so start minimal, but add a tool when a gap like this is confirmed."
+  },
+  {
+    "id": "x-d1-18",
+    "objective": "Agent Patterns and Frameworks",
+    "q": "A conversational coaching agent runs for months. Loading full past transcripts is too costly, but users expect it to remember what was discussed. Which memory scope fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Stateless, starting each session from scratch"
+      },
+      {
+        "id": "b",
+        "text": "Summarized history injected into each new session"
+      },
+      {
+        "id": "c",
+        "text": "In-context, with every past transcript in the prompt"
+      },
+      {
+        "id": "d",
+        "text": "A larger context window to fit all the transcripts"
+      }
+    ],
+    "answer": "b",
+    "explain": "Summarized memory condenses history into what the next session needs: cheaper than full transcripts, at the cost of unsummarized detail. It suits long-running conversational agents. Stateless would lose continuity."
+  },
+  {
+    "id": "x-d1-19",
+    "objective": "Agent Patterns and Frameworks",
+    "q": "Before you default an agent to in-context memory, what does the course say to measure?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Per-session state (history, system prompt, tool schemas) against the limit"
+      },
+      {
+        "id": "b",
+        "text": "The number of users who will run the agent each day"
+      },
+      {
+        "id": "c",
+        "text": "How many tools the agent calls in a typical session"
+      },
+      {
+        "id": "d",
+        "text": "The model's output speed in tokens per second"
+      }
+    ],
+    "answer": "a",
+    "explain": "Measure the state each session carries (history plus system prompt plus tool schemas) against the context limit before defaulting to in-context memory. Deciding at design time is far cheaper than refactoring under pressure."
+  },
+  {
+    "id": "x-d1-20",
+    "objective": "Agent Patterns and Frameworks",
+    "q": "Which two statements about subagents are correct according to the course? (Choose two.)",
+    "options": [
+      {
+        "id": "a",
+        "text": "They work in their own context and return their results"
+      },
+      {
+        "id": "b",
+        "text": "They inherit the parent's permission context"
+      },
+      {
+        "id": "c",
+        "text": "They automatically inherit every Skill the parent has"
+      },
+      {
+        "id": "d",
+        "text": "They receive the parent's full conversation history"
+      },
+      {
+        "id": "e",
+        "text": "They always load the project's CLAUDE.md first"
+      }
+    ],
+    "answer": [
+      "a",
+      "b"
+    ],
+    "explain": "Subagents get a separate, isolated context and return their output. They don't inherit Skills or history (list Skills explicitly), but they do inherit permission context. Built-in Explore and Plan subagents skip CLAUDE.md."
+  },
+  {
+    "id": "x-d1-21",
+    "objective": "Agent Architecture",
+    "q": "An orchestrator-worker research setup gives good results but uses about 15 times the tokens of a normal chat. Which change cuts the cost while keeping the pattern?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A capable lead with cheaper models for the subagents"
+      },
+      {
+        "id": "b",
+        "text": "The most capable model for the lead and every subagent"
+      },
+      {
+        "id": "c",
+        "text": "One subagent that handles every source in sequence"
+      },
+      {
+        "id": "d",
+        "text": "Removing the lead so subagents report to the user"
+      }
+    ],
+    "answer": "a",
+    "explain": "Using a capable model as the lead and cheaper models for the subagents reduces the cost multiplier while keeping the parallel work. Token usage is what buys the quality gain, so collapsing to one sequential worker removes the benefit."
+  },
+  {
+    "id": "x-d1-22",
+    "objective": "Agent Patterns and Frameworks",
+    "q": "In a fan-out research run, one subagent hits a rate limit. It has no backoff, and the lead agent stalls waiting for its results. What was missing?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The same retry, backoff and fallback handling in every subagent"
+      },
+      {
+        "id": "b",
+        "text": "A larger context window for the lead agent to wait in"
+      },
+      {
+        "id": "c",
+        "text": "More subagents, so one stalled worker matters less"
+      },
+      {
+        "id": "d",
+        "text": "A system prompt asking subagents to work more slowly"
+      }
+    ],
+    "answer": "a",
+    "explain": "Each subagent needs the same retriable-versus-terminal handling, backoff and fallback discipline as any other call. A single subagent with no backoff can stall the whole step. Runaway subagents and oversized tool results also push cost well past the usual 15× multiplier."
+  },
+  {
+    "id": "x-d1-23",
+    "objective": "Agent Construction with Claude",
+    "q": "A team chooses Claude Managed Agents because it prototypes fastest, but the data must stay under a Zero Data Retention agreement. What should drive the choice of wiring path?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Prototyping speed, since you can migrate later"
+      },
+      {
+        "id": "b",
+        "text": "Deployment and compliance constraints first"
+      },
+      {
+        "id": "c",
+        "text": "Whichever path the team has used before"
+      },
+      {
+        "id": "d",
+        "text": "The path with the fewest lines of code"
+      }
+    ],
+    "answer": "b",
+    "explain": "Choose the wiring path by deployment and compliance constraints, not prototyping speed. Managed Agents stores sessions server-side, so it isn't ZDR-eligible; use the Agent SDK or a raw loop instead."
+  },
+  {
+    "id": "x-d1-24",
+    "objective": "Agent Construction with Claude",
+    "q": "An agent's system prompt says \"You help with anything the user needs.\" It has eight tools and often picks the wrong one. Which loop step was skipped?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Scoping the system prompt to the task and its tools"
+      },
+      {
+        "id": "b",
+        "text": "Registering every tool the agent might ever need"
+      },
+      {
+        "id": "c",
+        "text": "Raising the temperature for more varied tool choices"
+      },
+      {
+        "id": "d",
+        "text": "Adding a human check after every single tool call"
+      }
+    ],
+    "answer": "a",
+    "explain": "The four loop steps are: register tools, scope the system prompt to the task and tools, handle the tool-use loop, and define exit conditions. A broad prompt makes routing unreliable."
+  }
+]

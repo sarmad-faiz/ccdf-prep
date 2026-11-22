@@ -1,0 +1,466 @@
+[
+  {
+    "id": "x-d6-01",
+    "objective": "Context Engineering",
+    "q": "Your agent compacts history by summarizing it, but after compaction it forgets which files it changed and which errors it already fixed. What should you change?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Compact more often so each summary covers fewer turns"
+      },
+      {
+        "id": "b",
+        "text": "Tell the summarizer to keep file paths, decisions and errors"
+      },
+      {
+        "id": "c",
+        "text": "Stop compacting and use a model with a larger window"
+      },
+      {
+        "id": "d",
+        "text": "Clear the context after each step instead of compacting"
+      }
+    ],
+    "answer": "b",
+    "explain": "The summarizer prompt decides what survives compaction. Specify what to preserve, such as every file path modified, decisions made, errors and their fixes. An under-specified summarizer is a common multi-session failure."
+  },
+  {
+    "id": "x-d6-02",
+    "objective": "Context Engineering",
+    "q": "You finished a feature in a long Claude Code session. Your next task is unrelated. What should you do with the context?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Compact it, so the old feature is summarized for later"
+      },
+      {
+        "id": "b",
+        "text": "Clear it, keeping lasting rules in CLAUDE.md"
+      },
+      {
+        "id": "c",
+        "text": "Keep going; the window will drop the oldest turns"
+      },
+      {
+        "id": "d",
+        "text": "Prune the last few turns and continue in the session"
+      }
+    ],
+    "answer": "b",
+    "explain": "Clearing fits when the next task is completely different; anything that must persist belongs in CLAUDE.md. Compaction suits continuing the same feature near the ceiling, and the window never drops turns on its own."
+  },
+  {
+    "id": "x-d6-03",
+    "objective": "Context Engineering",
+    "q": "Claude spent ten turns chasing a dead-end debugging theory, and the context is now full of irrelevant output. Which strategy fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Pruning: rewind to before the dead end and drop what followed"
+      },
+      {
+        "id": "b",
+        "text": "Compaction: summarize everything, dead end included"
+      },
+      {
+        "id": "c",
+        "text": "A subagent: hand the same theory to a fresh context"
+      },
+      {
+        "id": "d",
+        "text": "Caching: mark the dead-end turns so they cost less"
+      }
+    ],
+    "answer": "a",
+    "explain": "Pruning rewinds to an earlier message and drops what came after, which suits an unproductive path or debug clutter. Compaction would keep a summary of the clutter."
+  },
+  {
+    "id": "x-d6-04",
+    "objective": "Prompt Engineering",
+    "q": "An extraction prompt gets the task right, but the model invents its own nesting and field layout for the output. Which technique is missing?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A longer description of the task's purpose"
+      },
+      {
+        "id": "b",
+        "text": "Few-shot examples that show the exact structure"
+      },
+      {
+        "id": "c",
+        "text": "A higher effort setting for the extraction step"
+      },
+      {
+        "id": "d",
+        "text": "A system prompt describing the assistant's tone"
+      }
+    ],
+    "answer": "b",
+    "explain": "\"Task right, structure invented\" maps to few-shot examples: show the exact shape rather than describe it. Diagnose the failure type first, then add the one matching technique."
+  },
+  {
+    "id": "x-d6-05",
+    "objective": "Prompt Engineering",
+    "q": "A signature-parsing prompt works on every test email but breaks on emails with two signatures. What should you add?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A constraint or example covering the two-signature case"
+      },
+      {
+        "id": "b",
+        "text": "A rewrite of the whole prompt in a more formal style"
+      },
+      {
+        "id": "c",
+        "text": "A larger model for every email, to handle variety"
+      },
+      {
+        "id": "d",
+        "text": "A line asking the model to read each email carefully"
+      }
+    ],
+    "answer": "a",
+    "explain": "Clean on tested inputs but breaking on a variant means the prompt lacks a constraint or example for that variant. Add exactly that, re-run, and diagnose again if it still fails."
+  },
+  {
+    "id": "x-d6-06",
+    "objective": "Prompt Engineering",
+    "q": "Over five revisions a prompt kept growing. Outputs now run over 2,000 characters per call and latency rose, with no gain in accuracy. What does the course say is happening?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Long prompts trigger a slower, more careful model mode"
+      },
+      {
+        "id": "b",
+        "text": "The model calibrates length to the input; trim to what matters"
+      },
+      {
+        "id": "c",
+        "text": "The prompt is too short; add more detail so answers tighten"
+      },
+      {
+        "id": "d",
+        "text": "Long prompts lower the temperature, so output gets wordier"
+      }
+    ],
+    "answer": "b",
+    "explain": "A verbose prompt produces verbose output: more latency, no accuracy gain. Keep the constraints that change behavior and remove the rest. A prompt that grows every pass is a sign of skipped diagnosis."
+  },
+  {
+    "id": "x-d6-07",
+    "objective": "Output Handling",
+    "q": "In an agentic loop, Claude sometimes passes malformed arguments to a tool, and your code crashes. Which setting constrains the tool arguments?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`strict: true` on the tool definition"
+      },
+      {
+        "id": "b",
+        "text": "`output_config.format` with `json_schema`"
+      },
+      {
+        "id": "c",
+        "text": "A prefilled `{` at the start of the reply"
+      },
+      {
+        "id": "d",
+        "text": "`disable_parallel_tool_use` on the request"
+      }
+    ],
+    "answer": "a",
+    "explain": "Strict tool use validates tool arguments against the input schema before your code runs. `output_config.format` constrains the final response text, not tool arguments, and you can use both in one request."
+  },
+  {
+    "id": "x-d6-08",
+    "objective": "Output Handling",
+    "q": "You enabled JSON outputs with a schema. Which two cases must your code still handle? (Choose two.)",
+    "options": [
+      {
+        "id": "a",
+        "text": "`stop_reason: refusal`, with no usable JSON in the reply"
+      },
+      {
+        "id": "b",
+        "text": "`stop_reason: max_tokens`, with the JSON cut off midway"
+      },
+      {
+        "id": "c",
+        "text": "Tokens that break the schema appearing mid-response"
+      },
+      {
+        "id": "d",
+        "text": "A prefill needed to start the JSON object correctly"
+      },
+      {
+        "id": "e",
+        "text": "Field names drifting away from the schema over time"
+      }
+    ],
+    "answer": [
+      "a",
+      "b"
+    ],
+    "explain": "Constrained decoding stops schema-breaking tokens, but success isn't guaranteed: a refusal or hitting `max_tokens` leaves no parseable result. Check `stop_reason` before parsing. JSON outputs can't be combined with prefilling."
+  },
+  {
+    "id": "x-d6-09",
+    "objective": "Context Engineering",
+    "q": "An agent worked through 50 turns in testing. In production its context fills by turn 8. What does the course point to?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Production tool outputs are often 3–5× larger than test fixtures"
+      },
+      {
+        "id": "b",
+        "text": "Production traffic uses a smaller context window by default"
+      },
+      {
+        "id": "c",
+        "text": "The API silently drops turns faster under heavy load"
+      },
+      {
+        "id": "d",
+        "text": "Production users write much longer system prompts"
+      }
+    ],
+    "answer": "a",
+    "explain": "Every tool result stays in context, and production tool outputs run 3–5× longer than fixtures. Measure tool-result token cost against the largest real input before shipping."
+  },
+  {
+    "id": "x-d6-10",
+    "objective": "Context Engineering",
+    "q": "Claude needs to search 200 files to find where a config value is set. The output would flood the main conversation. What fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A subagent that explores in its own context and returns a summary"
+      },
+      {
+        "id": "b",
+        "text": "Pasting all 200 files into the main conversation at once"
+      },
+      {
+        "id": "c",
+        "text": "Compacting the conversation before the search starts"
+      },
+      {
+        "id": "d",
+        "text": "Clearing the context and losing the current task"
+      }
+    ],
+    "answer": "a",
+    "explain": "Subagent handoffs isolate self-contained subtasks, especially exploration, and return only a summary. You lose visibility into intermediate steps but keep the main context clean."
+  },
+  {
+    "id": "x-d6-11",
+    "objective": "Context Engineering",
+    "q": "A tool-heavy agent session keeps approaching the context ceiling. Which two steps does the course recommend? (Choose two.)",
+    "options": [
+      {
+        "id": "a",
+        "text": "Prune tool outputs once they have been used"
+      },
+      {
+        "id": "b",
+        "text": "Compact the history before reaching the cap"
+      },
+      {
+        "id": "c",
+        "text": "Rely on the API to truncate the oldest turns"
+      },
+      {
+        "id": "d",
+        "text": "Strip thinking blocks out of earlier turns"
+      },
+      {
+        "id": "e",
+        "text": "Ask Claude to keep its answers much shorter"
+      }
+    ],
+    "answer": [
+      "a",
+      "b"
+    ],
+    "explain": "Prune tool outputs after use and compact before the cap. The API never truncates for you, and thinking blocks must be returned unchanged, so stripping them breaks the request."
+  },
+  {
+    "id": "x-d6-12",
+    "objective": "Prompt Engineering",
+    "q": "A ticket classifier should return `BILLING`, `TECHNICAL` or `ESCALATION`, but it replies \"This looks like a billing issue.\" Which technique is missing?",
+    "options": [
+      {
+        "id": "a",
+        "text": "An output constraint: exactly one label, and nothing else"
+      },
+      {
+        "id": "b",
+        "text": "A longer explanation of what each category means"
+      },
+      {
+        "id": "c",
+        "text": "A higher effort setting so the model is more precise"
+      },
+      {
+        "id": "d",
+        "text": "A friendlier system prompt describing the assistant"
+      }
+    ],
+    "answer": "a",
+    "explain": "Wrong shape, such as a sentence instead of a label, means a missing output constraint: the allowed values, the form and where to stop. For example: \"Exactly one of: BILLING, TECHNICAL, ESCALATION. Return only the label.\""
+  },
+  {
+    "id": "x-d6-13",
+    "objective": "Prompt Engineering",
+    "q": "You diagnosed a failure and added the one matching technique. What comes next in the course's prompt-fixing loop?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Re-run, and diagnose again if it still fails"
+      },
+      {
+        "id": "b",
+        "text": "Add two more techniques to be safe"
+      },
+      {
+        "id": "c",
+        "text": "Ship it, since the right fix was applied"
+      },
+      {
+        "id": "d",
+        "text": "Rewrite the whole prompt from scratch"
+      }
+    ],
+    "answer": "a",
+    "explain": "The rule is: name the failure, add the one matching technique, re-run, and diagnose again if it still fails. Adding techniques without diagnosis makes the prompt longer, not more precise."
+  },
+  {
+    "id": "x-d6-14",
+    "objective": "Prompt Engineering",
+    "q": "A parser feeds a strict downstream contract, and its edge cases can be covered by tests. Which four techniques does the course stack for a reliable output shape in this situation?",
+    "options": [
+      {
+        "id": "a",
+        "text": "System prompt, XML tags, few-shot examples and output constraints"
+      },
+      {
+        "id": "b",
+        "text": "Temperature 0, higher effort, retries and a longer prompt"
+      },
+      {
+        "id": "c",
+        "text": "Prefilling, extended thinking, caching and batch processing"
+      },
+      {
+        "id": "d",
+        "text": "A larger model, more tools, subagents and a bigger window"
+      }
+    ],
+    "answer": "a",
+    "explain": "The four techniques for a reliable output shape are a system prompt, XML tags, few-shot examples and output constraints. Stack all four for a clearly defined output contract with coverable edge cases; for a simple task, simplify instead."
+  },
+  {
+    "id": "x-d6-15",
+    "objective": "Output Handling",
+    "q": "The first request with a new JSON schema is noticeably slower, but later requests with the same schema are fast. Why?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The schema is compiled to a grammar once, then cached"
+      },
+      {
+        "id": "b",
+        "text": "The model warms up after its first structured reply"
+      },
+      {
+        "id": "c",
+        "text": "The first response is always routed to a slower model"
+      },
+      {
+        "id": "d",
+        "text": "The SDK downloads the schema on the first request"
+      }
+    ],
+    "answer": "a",
+    "explain": "With structured outputs, a new schema is compiled into a grammar on first use, and compiled grammars are cached for 24 hours from last use. That first-call latency is one of the costs."
+  },
+  {
+    "id": "x-d6-16",
+    "objective": "Output Handling",
+    "q": "After enabling JSON outputs, your input token count per request rose slightly. Why?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The API adds a format-describing system prompt"
+      },
+      {
+        "id": "b",
+        "text": "The schema is sent back inside every response"
+      },
+      {
+        "id": "c",
+        "text": "JSON outputs turn on extended thinking"
+      },
+      {
+        "id": "d",
+        "text": "The response is generated twice and compared"
+      }
+    ],
+    "answer": "a",
+    "explain": "Structured outputs inject a system prompt describing the format, billed as normal input tokens. Constrained decoding then keeps the output valid against the schema."
+  },
+  {
+    "id": "x-d6-17",
+    "objective": "Output Handling",
+    "q": "Your code prefills the assistant reply with `{` and also sets `output_config.format` to a JSON schema. What does the course say about this combination?",
+    "options": [
+      {
+        "id": "a",
+        "text": "They are incompatible; pick the one that fits the task"
+      },
+      {
+        "id": "b",
+        "text": "It is the recommended way to force valid JSON output"
+      },
+      {
+        "id": "c",
+        "text": "Prefill is required for JSON outputs to work at all"
+      },
+      {
+        "id": "d",
+        "text": "It works, but only with streaming turned on"
+      }
+    ],
+    "answer": "a",
+    "explain": "JSON outputs and prefilling the assistant message are incompatible, so pick the one that fits the task. With JSON outputs, constrained decoding already enforces the schema at generation time."
+  },
+  {
+    "id": "x-d6-18",
+    "objective": "Output Handling",
+    "q": "A date extractor returns valid JSON that passes every schema check, but for sentences mentioning two dates it often picks the wrong one. What does this show?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Validation checks shape, not whether the value is right"
+      },
+      {
+        "id": "b",
+        "text": "The schema is broken and must be rewritten"
+      },
+      {
+        "id": "c",
+        "text": "Structured outputs don't work for date fields"
+      },
+      {
+        "id": "d",
+        "text": "The model needs a higher temperature for dates"
+      }
+    ],
+    "answer": "a",
+    "explain": "Schema validation confirms shape, not correctness. Add graded eval cases for edge inputs such as two dates, no date or \"next Tuesday\", then fix the prompt; the eval detects the problem and the prompt changes the output."
+  }
+]

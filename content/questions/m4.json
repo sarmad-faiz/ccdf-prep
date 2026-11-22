@@ -1,0 +1,502 @@
+[
+  {
+    "id": "m4-01",
+    "topic": "Evals & judges",
+    "q": "Your feature should return three capital cities as a JSON array. One run returns all three correct cities, but in a different order from your reference string, and your exact-match grader scores it zero. Which grading change fits this output best?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Replace the grader with an LLM judge and a correctness rubric"
+      },
+      {
+        "id": "b",
+        "text": "Use a code check that parses the JSON and checks each city"
+      },
+      {
+        "id": "c",
+        "text": "Normalize case and whitespace before running the exact match"
+      },
+      {
+        "id": "d",
+        "text": "Have a human reviewer check every output before scoring it"
+      }
+    ],
+    "answer": "b",
+    "explain": "The output follows a structural rule (a valid JSON array holding the three cities), so a code-graded check fits and runs locally at almost no cost. A judge would also work, but it adds cost and noise where a code check is enough. Normalizing case does nothing about the ordering."
+  },
+  {
+    "id": "m4-02",
+    "topic": "Evals & judges",
+    "q": "Your LLM-as-judge prompt asks only for a score from 1 to 10. Almost every output, good or bad, comes back scored around 6. What change does the course recommend?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Switch the judge to a more capable and expensive model tier"
+      },
+      {
+        "id": "b",
+        "text": "Run the judge three times per case and average the scores"
+      },
+      {
+        "id": "c",
+        "text": "Narrow the scale to 1–3 so the judge has to commit"
+      },
+      {
+        "id": "d",
+        "text": "Ask for strengths, weaknesses and reasoning with the score"
+      }
+    ],
+    "answer": "d",
+    "explain": "When a judge returns a bare score, it drifts toward a safe middle number, usually around 6. Asking for `strengths`, `weaknesses` and `reasoning` along with the `score` ties the number to something specific. Averaging repeated runs only averages the same drift."
+  },
+  {
+    "id": "m4-03",
+    "topic": "Evals & judges",
+    "q": "Your team wants to gate releases on an LLM-as-judge score for summary faithfulness. What should you do before you trust the judge's numbers?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Run it on human-labeled cases and measure how often it agrees"
+      },
+      {
+        "id": "b",
+        "text": "Run it twice on the same cases and confirm the scores match"
+      },
+      {
+        "id": "c",
+        "text": "Confirm every judge response parses as JSON with a score field"
+      },
+      {
+        "id": "d",
+        "text": "Grow the eval set to a thousand cases so the noise averages out"
+      }
+    ],
+    "answer": "a",
+    "explain": "Calibration means running the judge on cases a human has already labeled and measuring agreement. If agreement is low, tighten the rubric, add a good and a bad example, and measure again. Consistent or well-formed scores show the judge is stable, not that it is right."
+  },
+  {
+    "id": "m4-04",
+    "topic": "Evals & judges",
+    "q": "In one iteration you rewrite the prompt, add two few-shot examples and switch to a different model. The eval average barely moves. What is the main problem with how you iterated?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The eval set is too small to detect a change of that size"
+      },
+      {
+        "id": "b",
+        "text": "Few-shot examples should be graded by a separate judge first"
+      },
+      {
+        "id": "c",
+        "text": "You changed three things at once, so you can't tell what moved what"
+      },
+      {
+        "id": "d",
+        "text": "Model changes belong in a separate eval suite from prompt changes"
+      }
+    ],
+    "answer": "c",
+    "explain": "Change one component at a time, re-run, and read the per-case results so you know which change caused which effect. A flat average can also hide a change that fixed three cases and broke three others. Only the per-case breakdown shows that."
+  },
+  {
+    "id": "m4-05",
+    "topic": "Testing & tracing",
+    "q": "Your parser unit tests and the functional test of the model call both pass, but the end-to-end run answers from memory instead of from the retrieved policy. The trace shows `retrieve()` returns a list of `{\"content\": ...}` dicts, while `build_prompt()` expects a plain string. Which test would have caught this before users did?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A stricter unit test on the `retrieve()` function alone"
+      },
+      {
+        "id": "b",
+        "text": "A functional test with a more detailed expected output shape"
+      },
+      {
+        "id": "c",
+        "text": "A prompt test that checks the model cites the policy"
+      },
+      {
+        "id": "d",
+        "text": "An integration test driving `retrieve()` into `build_prompt()`"
+      }
+    ],
+    "answer": "d",
+    "explain": "Each component works correctly on its own, so the break sits at the handoff between them. That is the failure the integration level exists to catch, by running both components together on real retrieved data. A unit test cannot see it because the unit itself works."
+  },
+  {
+    "id": "m4-06",
+    "topic": "Testing & tracing",
+    "q": "Which test level checks that a single Claude call returns the expected shape for a given input, such as the right fields, the right types and a parseable response?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Unit test"
+      },
+      {
+        "id": "b",
+        "text": "Functional test"
+      },
+      {
+        "id": "c",
+        "text": "Integration test"
+      },
+      {
+        "id": "d",
+        "text": "End-to-end test"
+      }
+    ],
+    "answer": "b",
+    "explain": "A functional test checks one Claude call, not the system around it. A unit test isolates a single function, such as a parser or a tool wrapper. Integration tests cover the handoff between two components, and end-to-end tests run the whole flow."
+  },
+  {
+    "id": "m4-07",
+    "topic": "Testing & tracing",
+    "q": "An eval case scores 0 and the end-to-end test fails. You need to know whether retrieval, prompt building, the model call or parsing caused it. What gives you that?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A trace of each step's prompt, tool calls, outputs and timing"
+      },
+      {
+        "id": "b",
+        "text": "A larger eval set with more variants of the failing case"
+      },
+      {
+        "id": "c",
+        "text": "An LLM judge that explains why the final answer was wrong"
+      },
+      {
+        "id": "d",
+        "text": "Re-running the end-to-end test until the failure reproduces"
+      }
+    ],
+    "answer": "a",
+    "explain": "Tests tell you that a failure exists, and an end-to-end test sees only the final result. A trace records every step, so you can pin the failure to one of them. For example, it can show that step 4, the parser, raised a `KeyError`."
+  },
+  {
+    "id": "m4-08",
+    "topic": "Failure handling",
+    "q": "Your integration calls the Anthropic API under heavy production traffic. Which set of HTTP status codes belongs on the retry-with-backoff path?",
+    "options": [
+      {
+        "id": "a",
+        "text": "429, 400 and 529"
+      },
+      {
+        "id": "b",
+        "text": "401, 429 and 504"
+      },
+      {
+        "id": "c",
+        "text": "429, 529 and 503"
+      },
+      {
+        "id": "d",
+        "text": "403, 500 and 529"
+      }
+    ],
+    "answer": "c",
+    "explain": "A 429 (rate limit), a 529 (overload) and 5xx server errors are retriable, because waiting is likely to fix them. A 400, 401 or 403 is terminal, since the identical request fails again. Retry with capped exponential backoff and jitter, and use the `retry-after` header when the response includes one."
+  },
+  {
+    "id": "m4-09",
+    "topic": "Failure handling",
+    "q": "A tool your agent calls throws an exception, and your handler returns an empty `tool_result`. Claude then gives a confident answer built on the missing data. What should the handler do instead?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Return the result with `is_error: true` and the failure message"
+      },
+      {
+        "id": "b",
+        "text": "Retry the tool silently until it returns a non-empty result"
+      },
+      {
+        "id": "c",
+        "text": "Raise the exception and end the whole request with an HTTP error"
+      },
+      {
+        "id": "d",
+        "text": "Return a placeholder value so the model has data to reason on"
+      }
+    ],
+    "answer": "a",
+    "explain": "With `is_error` set to true, Claude knows the tool failed and can try another approach, ask for clarification or stop. An empty or placeholder result is treated as valid data, which leads to a confident wrong answer. Retry only when the underlying cause is transient."
+  },
+  {
+    "id": "m4-10",
+    "topic": "Failure handling",
+    "q": "A request comes back as HTTP 200, but `stop_reason` is `\"refusal\"`. Your retry wrapper only looks at status codes. How should your code handle this response?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Treat it as retriable and resend it with exponential backoff"
+      },
+      {
+        "id": "b",
+        "text": "Pass it downstream as valid output, since the call returned 200"
+      },
+      {
+        "id": "c",
+        "text": "Resend it right away on a different model tier to get an answer"
+      },
+      {
+        "id": "d",
+        "text": "Fail fast by raising it to the caller and logging it, with no retry"
+      }
+    ],
+    "answer": "d",
+    "explain": "A refusal is a content decision by the model, not a transient error. Raise it, log it, and never retry it silently or treat it as valid output. Because it arrives as a 200, a classifier based on status codes will miss it, so check `stop_reason` explicitly."
+  },
+  {
+    "id": "m4-11",
+    "topic": "Model selection",
+    "q": "You are launching a new production feature and have no eval results comparing models yet. Following the course's guidance, which model do you start with?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Opus, moving down only if the bill becomes a problem"
+      },
+      {
+        "id": "b",
+        "text": "Sonnet, moving up or down only when an eval justifies it"
+      },
+      {
+        "id": "c",
+        "text": "Haiku, moving up only if users start to complain"
+      },
+      {
+        "id": "d",
+        "text": "The most capable model, since quality failures cost most"
+      }
+    ],
+    "answer": "b",
+    "explain": "Start with Sonnet, the balanced default. Move up to Opus when an eval shows Sonnet missing the quality bar, and down to Haiku when an eval shows the quality drop is acceptable. Picking the most capable model by default is the most common and most expensive model-selection mistake."
+  },
+  {
+    "id": "m4-12",
+    "topic": "Model selection",
+    "q": "Most of your traffic is simple lookups, with a small share of complex synthesis requests. Which model setup fits best?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Opus for every request so complex ones never miss the bar"
+      },
+      {
+        "id": "b",
+        "text": "Haiku for every request to minimize total cost across traffic"
+      },
+      {
+        "id": "c",
+        "text": "A Sonnet default with an Opus override for complex requests"
+      },
+      {
+        "id": "d",
+        "text": "Sonnet for every request as one balanced choice for all needs"
+      }
+    ],
+    "answer": "c",
+    "explain": "With mixed traffic, use a default model plus an override chosen by a cheap signal such as task type. That way you pay for the more capable model only on requests that need it. Pinning one model suits uniform traffic, not a mix like this."
+  },
+  {
+    "id": "m4-13",
+    "topic": "Cost & orchestration",
+    "q": "You cache a long system prompt using a `cache_control` breakpoint. A teammate then adds the current timestamp at the top of the system prompt, and cache hits drop to zero. Why?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The cache needs an identical prefix, so any earlier change misses"
+      },
+      {
+        "id": "b",
+        "text": "The timestamp pushes the prompt under the minimum cache length"
+      },
+      {
+        "id": "c",
+        "text": "Caching applies only to tool schemas, not to system prompt text"
+      },
+      {
+        "id": "d",
+        "text": "The 5-minute TTL is disabled for prompts with dynamic content"
+      }
+    ],
+    "answer": "a",
+    "explain": "The cache matches an exact prefix, so any change before the breakpoint invalidates it and forces a full reprocess, even a single extra word. Put content that changes on every request after the last breakpoint, where it is processed normally."
+  },
+  {
+    "id": "m4-14",
+    "topic": "Cost & orchestration",
+    "q": "Every night you classify 200,000 support tickets. Results are needed by the next morning, and every request carries the same long system prompt. Which combination cuts cost the most?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Streaming responses plus a smaller model for each ticket"
+      },
+      {
+        "id": "b",
+        "text": "An orchestrator with parallel subagents splitting the tickets"
+      },
+      {
+        "id": "c",
+        "text": "Prompt caching alone, with each request sent synchronously"
+      },
+      {
+        "id": "d",
+        "text": "The Message Batches API combined with prompt caching"
+      }
+    ],
+    "answer": "d",
+    "explain": "No user is waiting, so the Message Batches API trades latency for a lower cost per request. Prompt caching then cuts the cost of the repeated prefix inside each request, and the two savings compound. Streaming only makes a response feel faster for a user who is waiting."
+  },
+  {
+    "id": "m4-15",
+    "topic": "Cost & orchestration",
+    "q": "You split a step-by-step refactoring task, where each step depends on the last, across a lead agent and four parallel subagents. Latency drops slightly, but the bill roughly triples and quality barely changes. What explains this?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The lead agent should run on a smaller model than the subagents"
+      },
+      {
+        "id": "b",
+        "text": "Each subagent spends its own tokens, but coupled work gains nothing"
+      },
+      {
+        "id": "c",
+        "text": "The subagents share one context window, which overflows and reruns"
+      },
+      {
+        "id": "d",
+        "text": "The subagents should stream their output to reduce token usage"
+      }
+    ],
+    "answer": "b",
+    "explain": "Each subagent uses its own context and tokens. Anthropic reported roughly 15x the tokens of a normal chat for its research system. That cost pays off only when work splits into independent parts. For tightly coupled tasks like coding, a single agent with good context is better, and if you do fan out, put the more capable model on the lead, not the subagents."
+  },
+  {
+    "id": "m4-16",
+    "topic": "Cost & orchestration",
+    "q": "You stream a response that includes tool use. Partway through, you have received several `input_json_delta` events for a `tool_use` block. When is it safe to run the tool?",
+    "options": [
+      {
+        "id": "a",
+        "text": "As soon as the `content_block_start` event names the tool"
+      },
+      {
+        "id": "b",
+        "text": "Once the partial JSON already holds all the required fields"
+      },
+      {
+        "id": "c",
+        "text": "Only after the stream closes and the full input is accumulated"
+      },
+      {
+        "id": "d",
+        "text": "As soon as a `text_delta` arrives after the tool block"
+      }
+    ],
+    "answer": "c",
+    "explain": "Accumulate `partial_json` deltas by block index until the stream closes, then parse the complete `input_json` and rebuild the tool calls. Acting on a partial block produces malformed tool inputs. If the stream breaks midway, retry the whole request instead of using the partial output. (Module 2 says the same thing at block level: a `tool_use` input is first complete at that block's `content_block_stop`; the turn is whole only at `message_stop`.)"
+  },
+  {
+    "id": "m4-17",
+    "topic": "Security",
+    "q": "Your agent summarizes web pages and can write files. All users are internal employees, so you skipped validating the pages it fetches. The agent then wrote a file no user asked for. What is the most likely cause?",
+    "options": [
+      {
+        "id": "a",
+        "text": "An internal user crafted a jailbreak to bypass safety limits"
+      },
+      {
+        "id": "b",
+        "text": "Instructions hidden in a fetched page were treated as commands"
+      },
+      {
+        "id": "c",
+        "text": "The system prompt did not tell the model to distrust users"
+      },
+      {
+        "id": "d",
+        "text": "A long page overflowed the context and pushed out the prompt"
+      }
+    ],
+    "answer": "b",
+    "explain": "This is prompt injection. The hostile instruction came through the content the agent fetched, not from the user, so trusting users does not help. Treat fetched content as data, and put a hook in front of the write tool that refuses actions triggered by untrusted input."
+  },
+  {
+    "id": "m4-18",
+    "topic": "Security",
+    "q": "You accept that no agent that reads untrusted content is fully immune to prompt injection. Which control most directly limits the damage when an injection does steer the agent?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Wrapping fetched content in delimiters marked as data only"
+      },
+      {
+        "id": "b",
+        "text": "A system-prompt rule forbidding instructions found in pages"
+      },
+      {
+        "id": "c",
+        "text": "Classifiers that screen untrusted content entering context"
+      },
+      {
+        "id": "d",
+        "text": "A least-privilege identity scoped to only the paths it needs"
+      }
+    ],
+    "answer": "d",
+    "explain": "Delimiters are a soft boundary, and classifiers only reduce how often an injection lands. Once an agent has been steered, what it can do is limited by its identity's permissions. With least privilege, the same injection becomes a denied action and a log entry instead of an incident."
+  },
+  {
+    "id": "m4-19",
+    "topic": "Security",
+    "q": "Your agent's prompt says never to write outside `/workspace/output`. You add a `PreToolUse` hook that returns `permissionDecision: \"deny\"` for such writes, while another rule allows `write_file`. What happens when the agent tries to write outside that path?",
+    "options": [
+      {
+        "id": "a",
+        "text": "It is blocked, because deny takes precedence over ask and allow"
+      },
+      {
+        "id": "b",
+        "text": "It is allowed, because the explicit allow rule overrides the hook"
+      },
+      {
+        "id": "c",
+        "text": "It is sent to the user for approval, because the rules conflict"
+      },
+      {
+        "id": "d",
+        "text": "It is allowed unless the model also obeys the prompt rule"
+      }
+    ],
+    "answer": "a",
+    "explain": "The precedence order is deny over ask over allow, so a single deny blocks the action no matter how many allow rules also apply. The prompt rule alone is not a security control. The hook enforces the boundary before the tool runs."
+  },
+  {
+    "id": "m4-20",
+    "topic": "Security",
+    "q": "Your `PreToolUse` hook blocks `write_file` outside the permitted path, and the agent's role denies `/etc` and `/secrets`. A security reviewer asks what stops a steered agent from calling a network endpoint that no hook or rule covers. What closes that gap?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Another hook added for each new endpoint the team discovers"
+      },
+      {
+        "id": "b",
+        "text": "A stronger system prompt forbidding unreviewed network calls"
+      },
+      {
+        "id": "c",
+        "text": "OS-level sandboxing with network isolation to named endpoints"
+      },
+      {
+        "id": "d",
+        "text": "Moving the API key out of config into an environment variable"
+      }
+    ],
+    "answer": "c",
+    "explain": "Hooks and roles protect only the paths and endpoints they explicitly cover. OS-level sandboxing isolates the agent at the process level, limiting the filesystem to its working directory and the network to permitted endpoints. It still holds when a hook is missing, misconfigured or bypassed. Adding hooks one endpoint at a time leaves the same gap open."
+  }
+]

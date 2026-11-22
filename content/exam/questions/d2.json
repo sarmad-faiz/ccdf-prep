@@ -1,0 +1,1298 @@
+[
+  {
+    "id": "x-d2-01",
+    "objective": "Understanding Requirements",
+    "q": "A client says, \"Our support agents must answer faster.\" What should you do before choosing any Claude feature?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Switch to the smallest model, since speed is what the client asked for"
+      },
+      {
+        "id": "b",
+        "text": "Turn checkable behaviors and derived constraints like latency into requirements"
+      },
+      {
+        "id": "c",
+        "text": "Enable streaming right away, because it makes every response feel faster"
+      },
+      {
+        "id": "d",
+        "text": "Choose the cloud platform the team already knows to save setup time"
+      }
+    ],
+    "answer": "b",
+    "explain": "\"Answer faster\" is a business problem, not yet a requirement. Turn it into checkable functional requirements plus derived infrastructure requirements, such as latency measured where users are, before picking a model, feature or platform."
+  },
+  {
+    "id": "x-d2-02",
+    "objective": "Understanding Requirements",
+    "q": "Which two of these are infrastructure (non-functional) requirements? (Choose two.)",
+    "options": [
+      {
+        "id": "a",
+        "text": "Customer data must be processed only within the EU"
+      },
+      {
+        "id": "b",
+        "text": "Responses arrive within 3 seconds for users in Singapore"
+      },
+      {
+        "id": "c",
+        "text": "The agent extracts the invoice number and the total"
+      },
+      {
+        "id": "d",
+        "text": "Each summary lists every action item with its owner"
+      },
+      {
+        "id": "e",
+        "text": "Tickets are classified into one of five fixed categories"
+      }
+    ],
+    "answer": [
+      "a",
+      "b"
+    ],
+    "explain": "Residency and latency are infrastructure constraints, and along with scale and identity they often decide the platform. The other three describe what the system must do, so they are functional requirements that become eval lines."
+  },
+  {
+    "id": "x-d2-03",
+    "objective": "Systems Life Cycle",
+    "q": "In production, operators notice a new failure: the agent mishandles invoices in a second currency. In lifecycle terms, what should happen to this finding?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Patch the prompt in production and skip the eval, since the fix is small"
+      },
+      {
+        "id": "b",
+        "text": "Log it under Operate only; requirements were frozen at Design"
+      },
+      {
+        "id": "c",
+        "text": "Feed it back into the requirements and the eval set in Iterate"
+      },
+      {
+        "id": "d",
+        "text": "Restart the project at Design with a different platform and model"
+      }
+    ],
+    "answer": "c",
+    "explain": "The last lifecycle phase, Iterate, feeds production findings back into requirements, which then flow into new eval cases and the next build. A production patch with no eval skips the gate that protects quality."
+  },
+  {
+    "id": "x-d2-04",
+    "objective": "Systems Life Cycle",
+    "q": "A regulated customer asks how you'll stop an under-tested version from reaching all of its users. What lifecycle control answers this?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A staging demo that the customer signs off before each release"
+      },
+      {
+        "id": "b",
+        "text": "Manual spot checks of production outputs after the rollout"
+      },
+      {
+        "id": "c",
+        "text": "A gate: full rollout only after the eval clears the pinned baseline"
+      },
+      {
+        "id": "d",
+        "text": "Using a model alias so fixes reach production without redeploys"
+      }
+    ],
+    "answer": "c",
+    "explain": "Gates are where regulated engagements keep control: no full production until the eval clears the pinned baseline score. Aliases do the opposite, letting behavior change with no gate at all."
+  },
+  {
+    "id": "x-d2-05",
+    "objective": "Claude API Mechanics",
+    "q": "Users upload PDF contracts for Claude to review. How should a PDF be sent in the Messages API?",
+    "options": [
+      {
+        "id": "a",
+        "text": "As an `image` block, one image per page of the PDF"
+      },
+      {
+        "id": "b",
+        "text": "As a `document` block with a base64, URL or file source"
+      },
+      {
+        "id": "c",
+        "text": "As a `text` block holding the raw base64 of the file"
+      },
+      {
+        "id": "d",
+        "text": "As a `tool_result` block returned by an upload tool"
+      }
+    ],
+    "answer": "b",
+    "explain": "PDFs use the `document` block type, not `image`. The source can be base64, a URL or a Files API `file_id`. No name field is required; `title` and `context` are optional."
+  },
+  {
+    "id": "x-d2-06",
+    "objective": "Claude API Mechanics",
+    "q": "The same product photo is attached to thousands of requests each day as inline base64. What is the better way to send it?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Upload it once with the Files API and reference its `file_id`"
+      },
+      {
+        "id": "b",
+        "text": "Keep inline base64 but compress the image harder each time"
+      },
+      {
+        "id": "c",
+        "text": "Put the base64 string in the system prompt so it gets cached"
+      },
+      {
+        "id": "d",
+        "text": "Describe the photo in text once and drop the image entirely"
+      }
+    ],
+    "answer": "a",
+    "explain": "Inline base64 suits one-off images, because the payload travels with every request. For assets reused across requests, upload once with the Files API and reference the `file_id`."
+  },
+  {
+    "id": "x-d2-07",
+    "objective": "Claude API Mechanics",
+    "q": "Your loop treats every response as final. A response arrives with `stop_reason: \"tool_use\"`. What should your code do next?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Show the response to the user, since the model finished its turn"
+      },
+      {
+        "id": "b",
+        "text": "Retry the same request, since the model did not produce an answer"
+      },
+      {
+        "id": "c",
+        "text": "Run the requested tools and send `tool_result` blocks next turn"
+      },
+      {
+        "id": "d",
+        "text": "Raise `max_tokens` and resend, because the reply was cut short"
+      }
+    ],
+    "answer": "c",
+    "explain": "`tool_use` means assembled tool calls are ready. Your code runs them and returns a matching `tool_result` for each in the next user turn, and Claude continues. Only `end_turn` means the model finished."
+  },
+  {
+    "id": "x-d2-08",
+    "objective": "Claude API Mechanics",
+    "q": "To cut costs, a teammate proposes routing a live chat feature, where users wait for each answer, through the Message Batches API. What is the problem?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Batches only accept classification prompts, not open-ended chat"
+      },
+      {
+        "id": "b",
+        "text": "Batch results can take up to 24 hours, which users can't wait for"
+      },
+      {
+        "id": "c",
+        "text": "Batches cost more per token than standard requests for chat"
+      },
+      {
+        "id": "d",
+        "text": "Batches can't include a system prompt or conversation history"
+      }
+    ],
+    "answer": "b",
+    "explain": "Batches trade latency for cost: lower per-token price, but non-deterministic latency up to 24 hours. They suit offline pipelines, evals and data jobs, never a flow where a user is waiting."
+  },
+  {
+    "id": "x-d2-09",
+    "objective": "Claude API Mechanics",
+    "q": "Which two statements about Message Batches API results are correct? (Choose two.)",
+    "options": [
+      {
+        "id": "a",
+        "text": "Results can come back in a different order than they were submitted"
+      },
+      {
+        "id": "b",
+        "text": "Each request's `custom_id` links its result back to the input"
+      },
+      {
+        "id": "c",
+        "text": "Results stream back in submission order as each one completes"
+      },
+      {
+        "id": "d",
+        "text": "A batch is limited to 1,000 requests, so large jobs must be split"
+      },
+      {
+        "id": "e",
+        "text": "Batch requests run at higher priority than standard API calls"
+      }
+    ],
+    "answer": [
+      "a",
+      "b"
+    ],
+    "explain": "Batch results return in arbitrary order, so you match them to inputs by `custom_id`. You poll the batch by its ID for completion. One batch holds up to 100,000 requests or 256 MB, whichever comes first."
+  },
+  {
+    "id": "x-d2-10",
+    "objective": "Software Engineering Foundations",
+    "q": "Your app wraps every SDK call in its own five-attempt retry loop. During an outage, logs show far more requests than you expected. Why?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The SDK already retries transient errors, so the two loops multiply"
+      },
+      {
+        "id": "b",
+        "text": "Outages make the API repeat each request on the server side"
+      },
+      {
+        "id": "c",
+        "text": "Streaming responses count as several requests in the logs"
+      },
+      {
+        "id": "d",
+        "text": "Retry loops resend the whole conversation history each time"
+      }
+    ],
+    "answer": "a",
+    "explain": "The official SDK already retries transient failures with progressive delays. Stacking an app-level loop on top multiplies the attempts and burns the retry budget, so pick one owner for retries."
+  },
+  {
+    "id": "x-d2-11",
+    "objective": "Software Engineering Foundations",
+    "q": "An AI code review flags a missing null check visible in the diff. It also claims the change will cause timeouts in another team's service. How should you treat these findings?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Apply both, since the reviewer had the full diff to work from"
+      },
+      {
+        "id": "b",
+        "text": "Trust the null check; treat the timeout claim as a hypothesis"
+      },
+      {
+        "id": "c",
+        "text": "Discard both, since AI reviews are not reliable enough to act on"
+      },
+      {
+        "id": "d",
+        "text": "Trust the timeout claim; null checks are style, not correctness"
+      }
+    ],
+    "answer": "b",
+    "explain": "An AI review gives findings to triage, not a verdict. Findings the diff can prove, like a missing null check, are trustworthy. Claims about runtime behavior or other systems are hypotheses to verify."
+  },
+  {
+    "id": "x-d2-12",
+    "objective": "Software Engineering Foundations",
+    "q": "Your Python web server handles many users at once, and each request waits on a Claude call. Threads block while they wait. Which client approach fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`AsyncAnthropic` with `async`/`await` for non-blocking calls"
+      },
+      {
+        "id": "b",
+        "text": "The Message Batches API, polling for each user's result"
+      },
+      {
+        "id": "c",
+        "text": "A synchronous client called in a loop over waiting users"
+      },
+      {
+        "id": "d",
+        "text": "A raw HTTP client, which avoids the SDK's blocking calls"
+      }
+    ],
+    "answer": "a",
+    "explain": "The async client gives non-blocking concurrency while staying real time. Batches are for bulk offline work with up to 24-hour latency, so they don't fit users waiting on a response."
+  },
+  {
+    "id": "x-d2-13",
+    "objective": "Software Engineering Foundations",
+    "q": "During a large refactor away from a legacy pattern, Claude Code keeps writing new files in the old pattern. Where should the target pattern be recorded?",
+    "options": [
+      {
+        "id": "a",
+        "text": "In each prompt, restated whenever you start a new task"
+      },
+      {
+        "id": "b",
+        "text": "In CLAUDE.md, so every session starts with the target pattern"
+      },
+      {
+        "id": "c",
+        "text": "In a code comment at the top of one of the legacy files"
+      },
+      {
+        "id": "d",
+        "text": "In the prompt of one subagent used for the refactor"
+      }
+    ],
+    "answer": "b",
+    "explain": "For code modernization, CLAUDE.md carries the target patterns so the agent doesn't drift back to legacy ones, because it loads in every session. One subagent's prompt governs only that subagent's task, not every session."
+  },
+  {
+    "id": "x-d2-14",
+    "objective": "Software Engineering Foundations",
+    "q": "A backend job sends one short classification request and uses the label right away. No person watches the output. Which request pattern fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Streaming, so the label appears token by token"
+      },
+      {
+        "id": "b",
+        "text": "A synchronous call that waits for the full reply"
+      },
+      {
+        "id": "c",
+        "text": "A Message Batch with one request, then polling"
+      },
+      {
+        "id": "d",
+        "text": "A websocket kept open for the life of the job"
+      }
+    ],
+    "answer": "b",
+    "explain": "Synchronous calls fit short responses and backend jobs. Streaming helps when output is long or someone is watching, and batching suits bulk work that can wait. Neither applies to one short label needed now."
+  },
+  {
+    "id": "x-d2-15",
+    "objective": "Claude Application Design",
+    "q": "A legal team uses one long conversation for several client matters. Details from one matter start showing up in answers about another. What is the right fix?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Tell Claude in each prompt to ignore the other matters"
+      },
+      {
+        "id": "b",
+        "text": "Start a fresh conversation for each matter"
+      },
+      {
+        "id": "c",
+        "text": "Raise the effort so Claude separates the matters itself"
+      },
+      {
+        "id": "d",
+        "text": "Move every matter into one large system prompt"
+      }
+    ],
+    "answer": "b",
+    "explain": "Unrelated work should not share a context. Clearing, or starting a new conversation, is the right move when the next task is completely different, because the previous context would only add bias or confusion. Asking Claude to ignore content already in context is unreliable."
+  },
+  {
+    "id": "x-d2-16",
+    "objective": "Claude Application Design",
+    "q": "Your prompt includes sample tickets as examples, and Claude sometimes answers the sample tickets as if they were the task. What change addresses this?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Move the samples to the end of the prompt, after the instructions"
+      },
+      {
+        "id": "b",
+        "text": "Wrap samples in XML tags that separate them from the instructions"
+      },
+      {
+        "id": "c",
+        "text": "Remove the samples and describe the ticket format in prose instead"
+      },
+      {
+        "id": "d",
+        "text": "Raise the temperature so Claude doesn't copy the samples so closely"
+      }
+    ],
+    "answer": "b",
+    "explain": "XML tags such as `<sample_input>` and `<ideal_output>` mark where examples begin and end, so Claude doesn't read them as part of the task. Removing the examples loses the shape they demonstrate."
+  },
+  {
+    "id": "x-d2-17",
+    "objective": "Claude Application Design",
+    "q": "Your assistant's role, output format and rules must hold for the entire session, even deep into the conversation. Where should they go?",
+    "options": [
+      {
+        "id": "a",
+        "text": "In the system prompt, as the session's behavioral contract"
+      },
+      {
+        "id": "b",
+        "text": "In the first user message, before the conversation begins"
+      },
+      {
+        "id": "c",
+        "text": "In a tool description that Claude reads on every tool call"
+      },
+      {
+        "id": "d",
+        "text": "In a few-shot example placed at the end of every request"
+      }
+    ],
+    "answer": "a",
+    "explain": "The system prompt is the persistent behavioral contract for the session: role, output format and rules that must not change. Drift that gets worse deeper into a conversation points to a missing or too vague system prompt."
+  },
+  {
+    "id": "x-d2-18",
+    "objective": "Claude Application Design",
+    "q": "Your team installs two plugins, `payments` and `infra`, and both contain a skill named `deploy`. How does a developer run the one from `payments`?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`/deploy`, after uninstalling the other plugin first"
+      },
+      {
+        "id": "b",
+        "text": "`/payments:deploy`, since plugin names prefix commands"
+      },
+      {
+        "id": "c",
+        "text": "`/deploy --plugin payments`, using a selector flag"
+      },
+      {
+        "id": "d",
+        "text": "`/deploy`; the most recently installed plugin wins"
+      }
+    ],
+    "answer": "b",
+    "explain": "Plugin commands are namespaced by plugin name, so `deploy` in plugin `payments` runs as `/payments:deploy`. Namespacing prevents collisions; renaming a plugin renames all its commands."
+  },
+  {
+    "id": "x-d2-19",
+    "objective": "Claude Application Design",
+    "q": "An image-description feature often merges objects that overlap in a photo into one. Which prompt change addresses this?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Ask Claude to be more careful when it describes busy images"
+      },
+      {
+        "id": "b",
+        "text": "Say how to handle overlap: describe each object and note it"
+      },
+      {
+        "id": "c",
+        "text": "Send the same image twice so Claude takes a second look"
+      },
+      {
+        "id": "d",
+        "text": "Enable thinking at high effort for every image request"
+      }
+    ],
+    "answer": "b",
+    "explain": "Visual prompts should name how to handle overlap, depth and occlusion, for example: \"If objects overlap, describe each separately and note the overlap.\" A vague request to be careful doesn't tell the model what to do."
+  },
+  {
+    "id": "x-d2-20",
+    "objective": "Configuration Management",
+    "q": "Output quality changed last week and no one can tell which prompt text was running then. Which practice prevents this?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Keep the prompt in a shared document that the team edits live"
+      },
+      {
+        "id": "b",
+        "text": "Version prompts with the code, alongside a pinned model ID"
+      },
+      {
+        "id": "c",
+        "text": "Log the model's responses, which show what prompt produced them"
+      },
+      {
+        "id": "d",
+        "text": "Use a model alias so the prompt always runs on the newest model"
+      }
+    ],
+    "answer": "b",
+    "explain": "Versioning means pinning the model, versioning the prompt and assets with the code, and keeping the prior version for rollback. Then you can tell what ran and revert it. An alias adds a second moving part."
+  },
+  {
+    "id": "x-d2-21",
+    "objective": "Configuration Management",
+    "q": "Every developer who clones the repo should get the same Claude Code deny rule for a sensitive directory. Which file should hold it?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`~/.claude/settings.json` on each developer's machine"
+      },
+      {
+        "id": "b",
+        "text": "`.claude/settings.local.json`, which stays out of git"
+      },
+      {
+        "id": "c",
+        "text": "`.claude/settings.json`, committed with the repository"
+      },
+      {
+        "id": "d",
+        "text": "`CLAUDE.md`, as a rule asking Claude to avoid the folder"
+      }
+    ],
+    "answer": "c",
+    "explain": "Project settings in `.claude/settings.json` are committed and apply to everyone who clones. User settings cover only one person's machine, and `settings.local.json` is auto-ignored by git for personal overrides. A CLAUDE.md line is a request, not an enforced rule."
+  },
+  {
+    "id": "x-d2-22",
+    "objective": "Configuration Management",
+    "q": "For an older model generation, which identifier pins a fixed snapshot rather than a moving alias?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`claude-haiku-4-5`"
+      },
+      {
+        "id": "b",
+        "text": "`claude-haiku-4-5-20251001`"
+      },
+      {
+        "id": "c",
+        "text": "`haiku`"
+      },
+      {
+        "id": "d",
+        "text": "`claude-haiku-latest`"
+      }
+    ],
+    "answer": "b",
+    "explain": "Before the 4.6 generation, the date-suffixed ID pins a snapshot while the bare name acts as an alias. From 4.6 on, the model ID alone pins. Pinning is for what ships; aliases are fine for throwaway prototypes."
+  },
+  {
+    "id": "x-d2-23",
+    "objective": "Understanding Requirements",
+    "q": "Which two items belong in a requirements record that will defend your platform choice at security review? (Choose two.)",
+    "options": [
+      {
+        "id": "a",
+        "text": "Functional behaviors written as checkable statements"
+      },
+      {
+        "id": "b",
+        "text": "The regulation behind each infrastructure constraint"
+      },
+      {
+        "id": "c",
+        "text": "The platform the team is most familiar with"
+      },
+      {
+        "id": "d",
+        "text": "The final production prompt text, word for word"
+      },
+      {
+        "id": "e",
+        "text": "The model alias the prototype happened to use"
+      }
+    ],
+    "answer": [
+      "a",
+      "b"
+    ],
+    "explain": "A requirements record holds the functional behaviors, the infrastructure constraints, and the regulation behind each one. That is what defends the platform choice against familiarity."
+  },
+  {
+    "id": "x-d2-24",
+    "objective": "Understanding Requirements",
+    "q": "Which question captures the identity requirement for a Claude deployment?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Who acts, with which credentials, and what is auditable?"
+      },
+      {
+        "id": "b",
+        "text": "How many requests arrive at the busiest hour of the day?"
+      },
+      {
+        "id": "c",
+        "text": "How fast must answers arrive, measured where users are?"
+      },
+      {
+        "id": "d",
+        "text": "In which country must the customer's data be processed?"
+      }
+    ],
+    "answer": "a",
+    "explain": "The four infrastructure requirements that most often decide the platform are latency, scale, residency and identity. Identity asks who acts, with what credentials, and what's auditable. The other options describe scale, latency and residency."
+  },
+  {
+    "id": "x-d2-25",
+    "objective": "Understanding Requirements",
+    "q": "A pilot handles 50 requests a day. Production is expected to handle 200,000 a day, with peaks at month end. Which infrastructure requirement is this?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Latency"
+      },
+      {
+        "id": "b",
+        "text": "Residency"
+      },
+      {
+        "id": "c",
+        "text": "Scale"
+      },
+      {
+        "id": "d",
+        "text": "Identity"
+      }
+    ],
+    "answer": "c",
+    "explain": "Scale asks how many requests and what peak. Like latency, residency and identity, it is usually derived rather than stated, and it should be captured before a platform is chosen."
+  },
+  {
+    "id": "x-d2-26",
+    "objective": "Systems Life Cycle",
+    "q": "In which lifecycle phase do you choose the platform, the model and the trust boundaries?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Requirements"
+      },
+      {
+        "id": "b",
+        "text": "Design"
+      },
+      {
+        "id": "c",
+        "text": "Build"
+      },
+      {
+        "id": "d",
+        "text": "Deploy"
+      }
+    ],
+    "answer": "b",
+    "explain": "The lifecycle runs Requirements → Design → Build → Test → Deploy → Operate → Iterate. Design is where platform, model and trust boundaries are chosen, after the requirements are known."
+  },
+  {
+    "id": "x-d2-27",
+    "objective": "Systems Life Cycle",
+    "q": "A two-day internal hackathon prototype will be thrown away afterwards. Must it pass through every lifecycle gate?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Yes; every Claude project must clear every gate in order"
+      },
+      {
+        "id": "b",
+        "text": "No; a one-off experiment can collapse phases, unlike a regulated deployment"
+      },
+      {
+        "id": "c",
+        "text": "Yes, but only the Deploy gate, since it pins the model"
+      },
+      {
+        "id": "d",
+        "text": "No; gates apply only to projects that use agents"
+      }
+    ],
+    "answer": "b",
+    "explain": "A one-off experiment may collapse phases; a regulated deployment cannot. Gates are where regulated engagements keep control, for example no build until residency is satisfied."
+  },
+  {
+    "id": "x-d2-28",
+    "objective": "Systems Life Cycle",
+    "q": "Your Claude application has just gone live. What does the Operate phase involve?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Instrumenting cost, latency and errors, and enforcing guardrails"
+      },
+      {
+        "id": "b",
+        "text": "Choosing the platform and model for the next release"
+      },
+      {
+        "id": "c",
+        "text": "Writing the first eval cases for the main feature"
+      },
+      {
+        "id": "d",
+        "text": "Collecting functional requirements from stakeholders"
+      }
+    ],
+    "answer": "a",
+    "explain": "In Operate you instrument cost, latency and errors and enforce guardrails. Findings then feed into Iterate. Platform choice belongs to Design, and evals are written before and during Build and Test."
+  },
+  {
+    "id": "x-d2-29",
+    "objective": "Claude API Mechanics",
+    "q": "Your code returns tool results to Claude in the assistant role, and the request fails validation. Which role should carry `tool_result` blocks?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The user role, since the role names who sends content to Claude"
+      },
+      {
+        "id": "b",
+        "text": "The assistant role, since Claude asked for the tool call"
+      },
+      {
+        "id": "c",
+        "text": "The system role, since results are trusted context"
+      },
+      {
+        "id": "d",
+        "text": "A separate tool role created for each tool call"
+      }
+    ],
+    "answer": "a",
+    "explain": "`tool_result` always goes in the user role. Role means who sends the content to Claude, not who authored it. Each result must reference the exact `tool_use_id` in the turn right after the `tool_use`."
+  },
+  {
+    "id": "x-d2-30",
+    "objective": "Claude API Mechanics",
+    "q": "To save tokens, your code keeps only the `tool_use` blocks from each assistant turn and drops the `text` block that came with them. What is the problem?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Nothing; text blocks are cosmetic and safe to remove"
+      },
+      {
+        "id": "b",
+        "text": "Dropping part of the content array corrupts the context"
+      },
+      {
+        "id": "c",
+        "text": "Text blocks must be moved into the system prompt instead"
+      },
+      {
+        "id": "d",
+        "text": "The API rejects turns that contain only `tool_use` blocks"
+      }
+    ],
+    "answer": "b",
+    "explain": "A `text` block may accompany `tool_use`, and you should preserve the full content array in history. Dropping text corrupts the conversation context that later turns rely on."
+  },
+  {
+    "id": "x-d2-31",
+    "objective": "Claude API Mechanics",
+    "q": "While streaming, you receive `content_block_start` for a `tool_use` block. What does that event give you?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The tool name and ID, but no input yet"
+      },
+      {
+        "id": "b",
+        "text": "The complete, parseable tool input JSON"
+      },
+      {
+        "id": "c",
+        "text": "The final `stop_reason` for the message"
+      },
+      {
+        "id": "d",
+        "text": "The result returned by running the tool"
+      }
+    ],
+    "answer": "a",
+    "explain": "A `tool_use` block opens with its name and ID and no input. The input arrives as partial JSON in `content_block_delta` events and can be parsed only after `content_block_stop`."
+  },
+  {
+    "id": "x-d2-32",
+    "objective": "Claude API Mechanics",
+    "q": "In a streamed response, which event carries the `stop_reason` and final usage?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`message_start`"
+      },
+      {
+        "id": "b",
+        "text": "`content_block_stop`"
+      },
+      {
+        "id": "c",
+        "text": "`message_delta`"
+      },
+      {
+        "id": "d",
+        "text": "`content_block_start`"
+      }
+    ],
+    "answer": "c",
+    "explain": "`message_delta` carries the `stop_reason` and final usage; check it before continuing a loop. `message_stop` then marks the message complete and safe to append to history."
+  },
+  {
+    "id": "x-d2-33",
+    "objective": "Claude API Mechanics",
+    "q": "Your image pipeline exceeds its token budget because users upload very large photos. What is often the cheap fix?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Resize images before ingestion"
+      },
+      {
+        "id": "b",
+        "text": "Send each image twice at half size"
+      },
+      {
+        "id": "c",
+        "text": "Switch every image to a PDF document"
+      },
+      {
+        "id": "d",
+        "text": "Raise `max_tokens` on each request"
+      }
+    ],
+    "answer": "a",
+    "explain": "Image tokens follow ⌈width/28⌉ × ⌈height/28⌉, so size drives cost. Run the formula on your largest production input; a simple resize step is often the cheap fix."
+  },
+  {
+    "id": "x-d2-34",
+    "objective": "Claude API Mechanics",
+    "q": "You move a workload from the first-party Claude API to Claude in Amazon Bedrock. What should you expect about model identifiers and lifecycle?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Identical IDs and identical retirement dates everywhere"
+      },
+      {
+        "id": "b",
+        "text": "Bedrock-specific IDs and partner retirement dates"
+      },
+      {
+        "id": "c",
+        "text": "No model IDs at all; Bedrock picks the model for you"
+      },
+      {
+        "id": "d",
+        "text": "Only aliases, because Bedrock cannot pin a version"
+      }
+    ],
+    "answer": "b",
+    "explain": "Claude in Amazon Bedrock uses its own model IDs (an `anthropic.` prefix), and partner retirement dates differ from Anthropic's. Check IDs and feature parity for the platform you choose."
+  },
+  {
+    "id": "x-d2-35",
+    "objective": "Software Engineering Foundations",
+    "q": "An AI code reviewer keeps flagging your team's intentional retry pattern as a bug in every pull request. What does the course suggest?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Give the reviewer your team's conventions"
+      },
+      {
+        "id": "b",
+        "text": "Turn off AI review for any file with retries"
+      },
+      {
+        "id": "c",
+        "text": "Apply its fix, since the reviewer is consistent"
+      },
+      {
+        "id": "d",
+        "text": "Switch to a larger model for code review"
+      }
+    ],
+    "answer": "a",
+    "explain": "AI code review produces findings to triage, not a verdict. Give the reviewer your conventions so it stops flagging intentional patterns."
+  },
+  {
+    "id": "x-d2-36",
+    "objective": "Software Engineering Foundations",
+    "q": "Your code reads the answer as `response.content[0].text`. After you enable thinking, it starts failing. Why?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A thinking block now comes first, so select the text block by type"
+      },
+      {
+        "id": "b",
+        "text": "Thinking moves the answer into a separate field outside `content`"
+      },
+      {
+        "id": "c",
+        "text": "Enabling thinking returns the answer as one plain string instead"
+      },
+      {
+        "id": "d",
+        "text": "The text block is removed whenever thinking is enabled"
+      }
+    ],
+    "answer": "a",
+    "explain": "With thinking on, reasoning returns as a `thinking` block placed before the answer's `text` block. Code that assumes the first block is text breaks; find blocks by type instead."
+  },
+  {
+    "id": "x-d2-37",
+    "objective": "Software Engineering Foundations",
+    "q": "A plugin installs cleanly on teammates' machines, but a bundled hook fails partway through a run because an environment variable is missing. How should you prevent this?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Hardcode the variable's value inside the hook script"
+      },
+      {
+        "id": "b",
+        "text": "Document env vars, validate them at install, test on a clean machine"
+      },
+      {
+        "id": "c",
+        "text": "Ask each teammate to copy your shell profile"
+      },
+      {
+        "id": "d",
+        "text": "Move the hook out of the plugin into CLAUDE.md"
+      }
+    ],
+    "answer": "b",
+    "explain": "Installing isn't running: install copies files, and paths and variables resolve on the running machine. Document and validate env vars at install, and test the install on a clean machine. Never hardcode secrets."
+  },
+  {
+    "id": "x-d2-38",
+    "objective": "Software Engineering Foundations",
+    "q": "Requests that summarize very large documents keep timing out, and retries time out too. What does the course recommend?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Retry more times with longer waits between them"
+      },
+      {
+        "id": "b",
+        "text": "Fix the request itself instead of retrying it more"
+      },
+      {
+        "id": "c",
+        "text": "Treat timeouts as terminal and drop those documents"
+      },
+      {
+        "id": "d",
+        "text": "Send the same request from several machines at once"
+      }
+    ],
+    "answer": "b",
+    "explain": "A timeout is usually retriable, but repeated timeouts on expensive requests mean the request itself needs fixing, for example by reducing what it sends. More retries just burn the retry budget."
+  },
+  {
+    "id": "x-d2-39",
+    "objective": "Software Engineering Foundations",
+    "q": "All of your traffic is single-fact lookups against a stable document set. A teammate wants to add a classifier that routes each query to fetch-once or agentic search. What is the better choice?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Build the router, since routing is always cheaper"
+      },
+      {
+        "id": "b",
+        "text": "Hardcode fetch-once, since the traffic is uniform"
+      },
+      {
+        "id": "c",
+        "text": "Hardcode agentic search, since it is more thorough"
+      },
+      {
+        "id": "d",
+        "text": "Send every query down both paths and compare"
+      }
+    ],
+    "answer": "b",
+    "explain": "A retrieval router pays off only on mixed traffic; uniform traffic should hardcode the path. Fetch-once fits single-fact lookups in a stable corpus, while agentic search costs more tokens."
+  },
+  {
+    "id": "x-d2-40",
+    "objective": "Software Engineering Foundations",
+    "q": "A stream is interrupted in two places: partway through some answer text, and partway through a `tool_use` block. Which partial result causes the more serious problem?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The partial text, because the user sees an unfinished sentence"
+      },
+      {
+        "id": "b",
+        "text": "The partial `tool_use`, if it is committed to history"
+      },
+      {
+        "id": "c",
+        "text": "Neither, because the API repairs partial blocks on retry"
+      },
+      {
+        "id": "d",
+        "text": "Both equally, since both are just incomplete strings"
+      }
+    ],
+    "answer": "b",
+    "explain": "Partial text shown to a user is cosmetic. A partial `tool_use` committed to history structurally corrupts the next turn. Discard the partial turn and retry from the last complete one."
+  },
+  {
+    "id": "x-d2-41",
+    "objective": "Claude Application Design",
+    "q": "A teammate adds a JSON schema, three few-shot examples and XML-tagged sections to a prompt that summarizes one paragraph in plain text. What does the course advise?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Keep all of it, since more structure is always safer"
+      },
+      {
+        "id": "b",
+        "text": "Simplify; a simple task doesn't need stacked techniques"
+      },
+      {
+        "id": "c",
+        "text": "Add a system prompt too, so all four are stacked"
+      },
+      {
+        "id": "d",
+        "text": "Replace it all with a higher effort setting"
+      }
+    ],
+    "answer": "b",
+    "explain": "Stack all four techniques only for a clearly defined output contract with coverable edge cases. For a simple task like summarizing a paragraph, simplify; added structure costs tokens and latency."
+  },
+  {
+    "id": "x-d2-42",
+    "objective": "Claude Application Design",
+    "q": "A plugin author relies on a deny rule in their own Claude Code settings to keep a hook safe. Teammates who install the plugin don't get that protection. Why?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A plugin carries only what it bundles, not the author's settings"
+      },
+      {
+        "id": "b",
+        "text": "Deny rules are disabled whenever a plugin is installed"
+      },
+      {
+        "id": "c",
+        "text": "Teammates must restart Claude Code twice to load deny rules"
+      },
+      {
+        "id": "d",
+        "text": "Plugins can't contain hooks, so the hook didn't install"
+      }
+    ],
+    "answer": "a",
+    "explain": "A plugin bundles skills, hooks, subagents and MCP servers, and carries only what it bundles. An author's local deny rule or hook doesn't travel unless it is included or documented."
+  },
+  {
+    "id": "x-d2-43",
+    "objective": "Claude Application Design",
+    "q": "Your organization wants a security plugin on every developer's machine that users and projects cannot override. How should it be deployed?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Through enterprise managed settings, at managed scope"
+      },
+      {
+        "id": "b",
+        "text": "In each repository's `.claude/settings.json`"
+      },
+      {
+        "id": "c",
+        "text": "In each developer's `~/.claude/settings.json`"
+      },
+      {
+        "id": "d",
+        "text": "As a line in every project's CLAUDE.md"
+      }
+    ],
+    "answer": "a",
+    "explain": "Enterprises deploy plugins through managed settings, and a managed-scope plugin can't be overridden by users or projects. Project and user settings can be changed by the people who own them."
+  },
+  {
+    "id": "x-d2-44",
+    "objective": "Claude Application Design",
+    "q": "A skill's frontmatter description reads \"Helpful utilities.\" The skill almost never triggers. What should you fix?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Move its steps into CLAUDE.md so they always load"
+      },
+      {
+        "id": "b",
+        "text": "Write a description naming when the skill applies"
+      },
+      {
+        "id": "c",
+        "text": "Rename the skill folder to something more unique"
+      },
+      {
+        "id": "d",
+        "text": "Lengthen the skill body with more detailed steps"
+      }
+    ],
+    "answer": "b",
+    "explain": "The description is the matching criterion: only the name and description load at start, and the body loads on a match. A vague description fails in every runtime."
+  },
+  {
+    "id": "x-d2-45",
+    "objective": "Claude Application Design",
+    "q": "A scheduled headless job built on the Agent SDK expects a skill from the repository, but the skill never loads. What should you check first?",
+    "options": [
+      {
+        "id": "a",
+        "text": "That `settingSources` is set explicitly to load filesystem settings"
+      },
+      {
+        "id": "b",
+        "text": "That the skill is also listed inside the project's CLAUDE.md"
+      },
+      {
+        "id": "c",
+        "text": "That the job runs in `bypassPermissions` mode"
+      },
+      {
+        "id": "d",
+        "text": "That the skill's body is shorter than 1,024 tokens"
+      }
+    ],
+    "answer": "a",
+    "explain": "In the Agent SDK, loading filesystem skills (and CLAUDE.md) is controlled by `settingSources`. Set it explicitly rather than relying on defaults."
+  },
+  {
+    "id": "x-d2-46",
+    "objective": "Claude Application Design",
+    "q": "Your RAG assistant answers questions well but misses queries that contain exact invoice IDs like \"INV-20931\". What does the course recommend?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Run lexical matching alongside the embedding search"
+      },
+      {
+        "id": "b",
+        "text": "Make every chunk much larger so IDs are included"
+      },
+      {
+        "id": "c",
+        "text": "Remove chunk overlap so IDs aren't duplicated"
+      },
+      {
+        "id": "d",
+        "text": "Put the entire invoice database into the prompt"
+      }
+    ],
+    "answer": "a",
+    "explain": "Semantic similarity can miss exact identifiers, so run lexical matching alongside embeddings. Chunk size and overlap are separate break points, and loading the whole corpus doesn't scale."
+  },
+  {
+    "id": "x-d2-47",
+    "objective": "Claude Application Design",
+    "q": "What is the main difference between classical RAG and agentic search?",
+    "options": [
+      {
+        "id": "a",
+        "text": "When retrieval happens: an upfront index versus live search"
+      },
+      {
+        "id": "b",
+        "text": "Classical RAG needs no embeddings; agentic search does"
+      },
+      {
+        "id": "c",
+        "text": "Agentic search puts the whole corpus into context"
+      },
+      {
+        "id": "d",
+        "text": "Classical RAG can be used only with Claude Code"
+      }
+    ],
+    "answer": "a",
+    "explain": "Classical RAG chunks and embeds material into a database ahead of time and matches by similarity. Agentic search has no index and searches live. The difference is timing."
+  },
+  {
+    "id": "x-d2-48",
+    "objective": "Configuration Management",
+    "q": "You want a personal Claude Code preference to apply in every project on your machine, without affecting teammates. Where does it belong?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`~/.claude/settings.json`"
+      },
+      {
+        "id": "b",
+        "text": "`.claude/settings.json` in each repo"
+      },
+      {
+        "id": "c",
+        "text": "`managed-settings.json`"
+      },
+      {
+        "id": "d",
+        "text": "The project's CLAUDE.md"
+      }
+    ],
+    "answer": "a",
+    "explain": "User settings in `~/.claude/settings.json` apply to every project on your machine. Project settings (`.claude/settings.json`) are committed for everyone who clones, `settings.local.json` holds personal per-project overrides, and managed settings are set by admins."
+  },
+  {
+    "id": "x-d2-49",
+    "objective": "Configuration Management",
+    "q": "A project hook calls `/home/alice/repo/scripts/lint.sh`. It works for Alice and fails for everyone else. What should the path use?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`$CLAUDE_PROJECT_DIR/scripts/lint.sh`"
+      },
+      {
+        "id": "b",
+        "text": "`~/repo/scripts/lint.sh`"
+      },
+      {
+        "id": "c",
+        "text": "`/home/$USER/repo/scripts/lint.sh`"
+      },
+      {
+        "id": "d",
+        "text": "`../scripts/lint.sh` from any folder"
+      }
+    ],
+    "answer": "a",
+    "explain": "Never use absolute or `~` paths in hooks and skills. Project scripts should use `$CLAUDE_PROJECT_DIR`; scripts bundled in a plugin use `${CLAUDE_PLUGIN_ROOT}`."
+  },
+  {
+    "id": "x-d2-50",
+    "objective": "Configuration Management",
+    "q": "Your team's Claude Code setup of skills, hooks and MCP servers differs from machine to machine, and bugs appear on some machines only. What packaging fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A versioned plugin bundling the shared setup"
+      },
+      {
+        "id": "b",
+        "text": "A longer CLAUDE.md describing the ideal setup"
+      },
+      {
+        "id": "c",
+        "text": "A wiki page each developer follows by hand"
+      },
+      {
+        "id": "d",
+        "text": "One custom command per teammate's machine"
+      }
+    ],
+    "answer": "a",
+    "explain": "Use a plugin when setup on one machine must be shared, versioned and consistent across a team. It bundles skills, hooks, subagents and MCP servers behind one install."
+  },
+  {
+    "id": "x-d2-51",
+    "objective": "Configuration Management",
+    "q": "An agent template you want to reuse has the repository path and the model name written directly into its code. What should packaging for reuse do with them?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Leave them, since the next team can edit the code"
+      },
+      {
+        "id": "b",
+        "text": "Make them configuration parameters with documented defaults"
+      },
+      {
+        "id": "c",
+        "text": "Move them into comments so they are easy to find"
+      },
+      {
+        "id": "d",
+        "text": "Remove them and let the agent discover them at runtime"
+      }
+    ],
+    "answer": "b",
+    "explain": "Packaging for reuse separates engagement-specific values from the reusable core and exposes them as parameters with documented defaults, credentials by reference. The asset then gets configured, not rewritten."
+  }
+]

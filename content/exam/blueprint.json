@@ -1,0 +1,89 @@
+{
+  "id": "ccdvf-2026-07",
+  "title": "Claude Certified Developer – Foundations (CCDV-F)",
+  "guide": "Exam Guide v1.0 (July 2026), as reported by third-party prep sites",
+  "effectiveFrom": "2026-07-01",
+  "items": 53,
+  "minutes": 120,
+  "pass": 720,
+  "domains": [
+    {
+      "id": "d1",
+      "name": "Agents and Workflows",
+      "weight": 14.7,
+      "count": 8
+    },
+    {
+      "id": "d2",
+      "name": "Applications and Integration",
+      "weight": 33.1,
+      "count": 17
+    },
+    {
+      "id": "d3",
+      "name": "Claude Code",
+      "weight": 3.1,
+      "count": 2
+    },
+    {
+      "id": "d4",
+      "name": "Eval, Testing, and Debugging",
+      "weight": 2.6,
+      "count": 1
+    },
+    {
+      "id": "d5",
+      "name": "Model Selection and Optimization",
+      "weight": 16.8,
+      "count": 9
+    },
+    {
+      "id": "d6",
+      "name": "Prompt and Context Engineering",
+      "weight": 11.0,
+      "count": 6
+    },
+    {
+      "id": "d7",
+      "name": "Security and Safety",
+      "weight": 8.1,
+      "count": 4
+    },
+    {
+      "id": "d8",
+      "name": "Tools and MCPs",
+      "weight": 10.6,
+      "count": 6
+    }
+  ],
+  "topicDomains": {
+    "m1|LLM behavior": "d5",
+    "m1|Models & reasoning": "d5",
+    "m1|Prompting modes": "d5",
+    "m1|Technical substrate": "d5",
+    "m2|Prompting craft": "d6",
+    "m2|Extended thinking": "d5",
+    "m2|Tool use & schemas": "d8",
+    "m2|Streaming": "d2",
+    "m2|Context engineering": "d6",
+    "m2|Agent construction": "d1",
+    "m2|Agent memory": "d1",
+    "m2|Multimodal & batch": "d2",
+    "m3|Permission modes": "d3",
+    "m3|Project context": "d3",
+    "m3|Packaging workflows": "d8",
+    "m3|MCP servers": "d8",
+    "m3|Enterprise integration": "d7",
+    "m4|Evals & judges": "d4",
+    "m4|Testing & tracing": "d4",
+    "m4|Failure handling": "d4",
+    "m4|Model selection": "d5",
+    "m4|Cost & orchestration": "d5",
+    "m4|Security": "d7",
+    "m5|Packaging for reuse": "d2",
+    "m5|Requirements & lifecycle": "d2",
+    "m5|Deployment & versioning": "d2",
+    "m5|Comparing platforms": "d2",
+    "m5|Trust boundaries": "d7"
+  }
+}

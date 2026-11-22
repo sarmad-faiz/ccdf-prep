@@ -1,0 +1,552 @@
+[
+  {
+    "id": "m2-01",
+    "topic": "Prompting craft",
+    "q": "Your in-app assistant handles billing questions well early in a conversation, but after a dozen turns it starts answering broader product questions and its tone drifts. Using the course's diagnose-first approach, what is the prompt most likely missing?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Few-shot examples showing the exact structure of a reply"
+      },
+      {
+        "id": "b",
+        "text": "An output constraint naming the fields and stopping point"
+      },
+      {
+        "id": "c",
+        "text": "A more specific system prompt fixing role, scope and format"
+      },
+      {
+        "id": "d",
+        "text": "Extended thinking so the model can track the long conversation"
+      }
+    ],
+    "answer": "c",
+    "explain": "Scope and tone drift that worsens across turns points to an underspecified system prompt, the behavioral contract that holds role, scope and format steady for every response. An output constraint fixes output in the wrong shape and few-shot examples fix invented structure; neither stops drift."
+  },
+  {
+    "id": "m2-02",
+    "topic": "Prompting craft",
+    "q": "You have revised a ticket-classification prompt five times, each time adding paragraphs that describe the categories in more detail. Replies are now over 2,000 characters, latency is up, and accuracy has not improved. What should you do next?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Stop and diagnose, then add an exact output constraint and few-shot pairs"
+      },
+      {
+        "id": "b",
+        "text": "Add another paragraph that covers each of the ambiguous edge cases in detail"
+      },
+      {
+        "id": "c",
+        "text": "Enable extended thinking so it can reason through the ambiguous tickets"
+      },
+      {
+        "id": "d",
+        "text": "Raise `max_tokens` so the longer answers are no longer cut off at the end"
+      }
+    ],
+    "answer": "a",
+    "explain": "A prompt that grows longer without getting more precise means the diagnosis step is being skipped, and long, unfocused prompts produce long, unfocused output. The fix is structural: an output constraint for the exact label plus few-shot pairs, not more description."
+  },
+  {
+    "id": "m2-03",
+    "topic": "Prompting craft",
+    "q": "Your extraction service's prompt says \"Return only JSON matching this shape.\" It holds on every test input, but now and then a production ticket gets a stray sentence before the JSON and the parser breaks. Which change makes the final response match your schema at generation time?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Set `strict: true` on the tool definitions you already pass"
+      },
+      {
+        "id": "b",
+        "text": "Prefill the assistant turn with `{` so the reply always starts as JSON"
+      },
+      {
+        "id": "c",
+        "text": "Add two few-shot examples showing the exact JSON to return"
+      },
+      {
+        "id": "d",
+        "text": "Set `output_config.format` to type `json_schema` with your schema"
+      }
+    ],
+    "answer": "d",
+    "explain": "JSON outputs (`output_config.format` with `json_schema`) use constrained decoding, so tokens that would violate the schema can't be generated. `strict: true` constrains the arguments Claude passes to tools, not the final response; prefilling is incompatible with JSON outputs, and few-shot examples are still only a prompt-level request."
+  },
+  {
+    "id": "m2-04",
+    "topic": "Prompting craft",
+    "q": "You enabled JSON outputs with a schema. Most responses parse, but a few long extractions come back cut off mid-object, with `stop_reason` set to `max_tokens`. What is the correct takeaway?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The compiled schema grammar expired, so generation ran unconstrained"
+      },
+      {
+        "id": "b",
+        "text": "The reply hit the output token limit; check `stop_reason` before parsing"
+      },
+      {
+        "id": "c",
+        "text": "The model declined the request for safety reasons partway through"
+      },
+      {
+        "id": "d",
+        "text": "The injected format prompt pushed the whole request past the context window"
+      }
+    ],
+    "answer": "b",
+    "explain": "A guaranteed schema is not a guaranteed success: a response that reaches the `max_tokens` limit stops mid-structure with `stop_reason` `max_tokens`. A safety decline is reported as `stop_reason` `refusal` instead, so your code checks `stop_reason` rather than assuming every response parses."
+  },
+  {
+    "id": "m2-05",
+    "topic": "Extended thinking",
+    "q": "After you turn on extended thinking at high effort for an agent's planning step, the bill rises sharply even though the visible answers are about the same length as before. What explains the increase?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Thinking tokens are billed at a premium above the normal output rate"
+      },
+      {
+        "id": "b",
+        "text": "Any request with thinking enabled carries a fixed per-request surcharge"
+      },
+      {
+        "id": "c",
+        "text": "Thinking tokens cost the same as output tokens, and they add up"
+      },
+      {
+        "id": "d",
+        "text": "Enabling thinking raises the price of the system prompt's input tokens"
+      }
+    ],
+    "answer": "c",
+    "explain": "Thinking tokens cost the same as output tokens, so deeper reasoning adds output spend even when the final answer is unchanged. That is why you enable thinking only where a reasoning pass changes the answer and leave it off for mechanical tasks like classification or extraction."
+  },
+  {
+    "id": "m2-06",
+    "topic": "Extended thinking",
+    "q": "Your agent runs a tool-use loop with extended thinking on. To save context, your code removes thinking blocks from each assistant turn before appending it to history, and the next request is rejected. What is the fix?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Turn extended thinking off for any turn that follows a tool call result"
+      },
+      {
+        "id": "b",
+        "text": "Replace each thinking block with a short summary of its reasoning"
+      },
+      {
+        "id": "c",
+        "text": "Keep readable thinking blocks but drop the encrypted redacted ones"
+      },
+      {
+        "id": "d",
+        "text": "Append the assistant content as received, thinking blocks included"
+      }
+    ],
+    "answer": "d",
+    "explain": "In a tool-use loop every thinking block must go back to the API unchanged: each carries a signature, so editing, summarizing or dropping it breaks verification. Redacted thinking blocks follow the same rule. If accumulated reasoning is the concern, use context-engineering strategies instead."
+  },
+  {
+    "id": "m2-07",
+    "topic": "Extended thinking",
+    "q": "You move code that configures extended thinking with a fixed `budget_tokens` value onto one of the newest model generations, and requests now fail with a 400 error. What is the intended way to control reasoning depth?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Lower `budget_tokens` so it stays below `max_tokens`"
+      },
+      {
+        "id": "b",
+        "text": "Use adaptive thinking and tune it with the effort setting"
+      },
+      {
+        "id": "c",
+        "text": "Describe the desired reasoning length in the system prompt"
+      },
+      {
+        "id": "d",
+        "text": "Raise `max_tokens` so the thinking budget fits inside it"
+      }
+    ],
+    "answer": "b",
+    "explain": "On current models reasoning is adaptive: the model decides how much each request needs, and you tune depth with the effort setting. The older `budget_tokens` control is deprecated and returns a 400 error on the newest generations, so resizing it or `max_tokens` won't help."
+  },
+  {
+    "id": "m2-08",
+    "topic": "Tool use & schemas",
+    "q": "Claude returns one assistant turn containing two `tool_use` blocks. Your code sends the first `tool_result` in the next user turn and the second `tool_result` in the user turn after that. The request fails validation. Why?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Each `tool_use` needs its `tool_result` in the very next user turn"
+      },
+      {
+        "id": "b",
+        "text": "Results for parallel calls must be sent in the assistant role"
+      },
+      {
+        "id": "c",
+        "text": "Two calls in one turn require `disable_parallel_tool_use` set"
+      },
+      {
+        "id": "d",
+        "text": "The late result must set `is_error` because it arrived out of order"
+      }
+    ],
+    "answer": "a",
+    "explain": "Every `tool_use` block must be answered by a `tool_result` with the matching `tool_use_id` in the user turn that immediately follows, so all calls from one assistant turn are resolved together. `tool_result` blocks always go in the user role, and `disable_parallel_tool_use` only forces one call per turn."
+  },
+  {
+    "id": "m2-09",
+    "topic": "Tool use & schemas",
+    "q": "Claude keeps calling `search_docs` even when the answer is already in the conversation. Its description reads \"Use this to find information about the product,\" and `get_session_context` reads \"Use this to retrieve relevant information from the current session.\" What is the most effective fix?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Rename both tools so their names are more clearly distinct"
+      },
+      {
+        "id": "b",
+        "text": "Mark more parameters as required in both input schemas"
+      },
+      {
+        "id": "c",
+        "text": "Add a sentence on when not to call it to both descriptions"
+      },
+      {
+        "id": "d",
+        "text": "Restate the tool-selection rules inside each new user message"
+      }
+    ],
+    "answer": "c",
+    "explain": "Claude routes mainly on descriptions, and both of these amount to \"find information,\" so they look the same at decision time. An exclusion condition in each description gives Claude a decision boundary; names alone aren't enough when descriptions overlap. If exclusions can't separate them, merge them into one tool with a type parameter."
+  },
+  {
+    "id": "m2-10",
+    "topic": "Tool use & schemas",
+    "q": "Your app uses the API MCP Connector to attach a server with a large tool list, and input token counts are high before the first user message is even handled. Which change reduces this upfront context cost?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Switch the server to the stdio transport so its tools load locally"
+      },
+      {
+        "id": "b",
+        "text": "Set `disable_parallel_tool_use` so fewer tools are considered per turn"
+      },
+      {
+        "id": "c",
+        "text": "Copy the server's tool descriptions into the system prompt"
+      },
+      {
+        "id": "d",
+        "text": "Set `defer_loading` in the `mcp_toolset` and disable unused tools"
+      }
+    ],
+    "answer": "d",
+    "explain": "Connected MCP servers add their tool definitions to context even when the tools aren't used. In an `mcp_toolset`, `defer_loading` delays a definition until the model needs it and `enabled` hides tools you don't want exposed (with the `mcp-client-2025-11-20` beta header). The connector supports only HTTP servers, so stdio isn't an option there."
+  },
+  {
+    "id": "m2-11",
+    "topic": "Streaming",
+    "q": "To start tool execution sooner, your streaming handler tries to parse a tool call's input JSON every time a `content_block_delta` arrives for that `tool_use` block. It intermittently throws parse errors or runs the tool with missing arguments. When is the input first safe to parse?",
+    "options": [
+      {
+        "id": "a",
+        "text": "When `content_block_start` opens the `tool_use` block"
+      },
+      {
+        "id": "b",
+        "text": "On the first delta whose fragment contains a closing brace"
+      },
+      {
+        "id": "c",
+        "text": "When `message_start` delivers the initial message shell"
+      },
+      {
+        "id": "d",
+        "text": "When `content_block_stop` closes that particular block"
+      }
+    ],
+    "answer": "d",
+    "explain": "Tool inputs arrive as a partial JSON string spread across several `content_block_delta` events, and it isn't complete until `content_block_stop` closes the block. `content_block_start` carries only the tool name and id, with no input yet, so collect the deltas and act only after the block closes."
+  },
+  {
+    "id": "m2-12",
+    "topic": "Streaming",
+    "q": "Your streaming agent appends the assistant turn to history whenever its read loop ends. After a network blip, the operator retries and the retry fails with a validation error pointing at a malformed `tool_use` block. What is the right fix?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Tighten the tool's `input_schema` so malformed input is rejected"
+      },
+      {
+        "id": "b",
+        "text": "Send back a `tool_result` with `is_error` set for the broken call"
+      },
+      {
+        "id": "c",
+        "text": "Commit only after `message_stop`; discard partial turns and retry"
+      },
+      {
+        "id": "d",
+        "text": "Raise `max_tokens` so the stream can finish before the connection drops"
+      }
+    ],
+    "answer": "c",
+    "explain": "A stream ending is not a message completing; only `message_stop` means the turn is whole. The dropped stream wrote a half-built `tool_use` block into history, so the error surfaced on the retry rather than in the schema. Gate the history append on `message_stop` and retry from the last complete turn."
+  },
+  {
+    "id": "m2-13",
+    "topic": "Context engineering",
+    "q": "An agent picks tools correctly for its first four turns, each returning a large document, then starts choosing the wrong tool from turn 5 onward. Production tool outputs are much larger than your test fixtures. What should you check and fix first?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The wrong tool's description, which needs an exclusion condition"
+      },
+      {
+        "id": "b",
+        "text": "Context filling with tool outputs; prune used results and compact"
+      },
+      {
+        "id": "c",
+        "text": "`max_tokens`, which may be too low for Claude to finish a reply"
+      },
+      {
+        "id": "d",
+        "text": "Parallel calls, which should be turned off with `disable_parallel_tool_use`"
+      }
+    ],
+    "answer": "b",
+    "explain": "Tool selection that degrades after a fixed number of turns is a sign of context pressure: accumulated tool results crowd out the system prompt and instructions. Pruning used outputs and compacting before the cap fixes the cause, while rewriting descriptions treats a symptom that only looks like a schema problem."
+  },
+  {
+    "id": "m2-14",
+    "topic": "Context engineering",
+    "q": "A request to your agent fits within the model's context window, but generation reaches the window ceiling partway through the response. On current models, what comes back?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A validation error from the API, with no output generated at all"
+      },
+      {
+        "id": "b",
+        "text": "The partial output so far, with `stop_reason` set to `max_tokens`"
+      },
+      {
+        "id": "c",
+        "text": "A complete reply, produced after the oldest turns are silently dropped"
+      },
+      {
+        "id": "d",
+        "text": "The partial output, with a `model_context_window_exceeded` stop reason"
+      }
+    ],
+    "answer": "d",
+    "explain": "When a request fits but generation hits the window ceiling, current models return what was generated with the `model_context_window_exceeded` stop reason. A request too large from the start gets a validation error before generation, and the API never silently truncates old content; trimming or summarizing history is your application's job."
+  },
+  {
+    "id": "m2-15",
+    "topic": "Context engineering",
+    "q": "A multi-turn assistant sends the same long system prompt and a large set of tool definitions on every turn, and input cost dominates the bill. What is the highest-leverage way to cut that cost?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Call `count_tokens` before each turn to measure how large the prompt is"
+      },
+      {
+        "id": "b",
+        "text": "Mark the stable prefix with `cache_control` of type `ephemeral`"
+      },
+      {
+        "id": "c",
+        "text": "Clear the session after every turn so no history can accumulate"
+      },
+      {
+        "id": "d",
+        "text": "Compact the conversation after every turn to shrink the prefix"
+      }
+    ],
+    "answer": "b",
+    "explain": "Prompt caching stores the processing of a stable prefix so later requests reuse it at a fraction of the cost; you mark it with `cache_control` of type `ephemeral` on the last block to cache (up to four breakpoints). `count_tokens` measures context pressure but doesn't reduce what you pay, and clearing throws away the session's context."
+  },
+  {
+    "id": "m2-16",
+    "topic": "Agent construction",
+    "q": "You need to process invoices. Every invoice goes through the same five steps, inputs arrive in a fixed format, and each step needs guardrails and standard operational logging. A teammate proposes an autonomous agent with all the tools registered. What does the course recommend?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A workflow, because the exact steps can be written in code"
+      },
+      {
+        "id": "b",
+        "text": "An agent, because it can choose the order of the steps itself"
+      },
+      {
+        "id": "c",
+        "text": "A Managed Agents agent, so Anthropic takes care of the logging"
+      },
+      {
+        "id": "d",
+        "text": "An agent with extended thinking to plan the steps reliably"
+      }
+    ],
+    "answer": "a",
+    "explain": "When you can enumerate the steps, inputs are well constrained, and step-level guardrails and standard observability matter, a workflow is the right pattern. An agent here adds behavioral complexity and transcript-level observability without adding capability; agents fit when the path can't be enumerated in advance."
+  },
+  {
+    "id": "m2-17",
+    "topic": "Agent construction",
+    "q": "An agent edits customer config files using `read_file`, `write_file` and `validate_config`, looping until validation passes. In production it changed a rate limit that passed validation but broke a downstream system that relied on the old value. What design change addresses the root cause?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Lower the iteration cap so the agent stops after fewer write attempts"
+      },
+      {
+        "id": "b",
+        "text": "Run `validate_config` a second time before letting the loop exit"
+      },
+      {
+        "id": "c",
+        "text": "Add an exclusion condition to the `write_file` description"
+      },
+      {
+        "id": "d",
+        "text": "Add a human review step before `write_file` hits the live config"
+      }
+    ],
+    "answer": "d",
+    "explain": "The loop did what it was designed to do; the gap was between \"proposed change ready\" and \"write committed.\" A tool that can take an irreversible action in production needs a human-in-the-loop checkpoint before it runs, designed in when you scope the tools. Iteration caps and extra validation can't catch effects outside the file being checked."
+  },
+  {
+    "id": "m2-18",
+    "topic": "Agent construction",
+    "q": "Your team wants to use Claude Managed Agents for a long-running agent that will process patient records containing PHI under a HIPAA BAA. Which consideration decides the wiring path?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Managed Agents fits, since Anthropic runs the loop and sandbox securely"
+      },
+      {
+        "id": "b",
+        "text": "Long runtimes favor Managed Agents once the PHI is redacted"
+      },
+      {
+        "id": "c",
+        "text": "Its stored sessions aren't BAA-eligible; use the SDK or a raw loop"
+      },
+      {
+        "id": "d",
+        "text": "Prototype on Managed Agents, then export it to a BAA route"
+      }
+    ],
+    "answer": "c",
+    "explain": "Managed Agent sessions are stateful and stored server-side, which is why they currently aren't eligible for ZDR or a HIPAA BAA. The governing constraint picks the path before convenience does, so a PHI workload goes to the Agent SDK or a raw Messages API loop on a covered configuration."
+  },
+  {
+    "id": "m2-19",
+    "topic": "Agent memory",
+    "q": "A support agent helps engineers with escalations across many short sessions over several days. Its code concatenates every prior session's transcript into the messages array, and by the fourth session over 40,000 tokens are used before the first tool call. What is the right fix?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Persist history in external storage and inject only what is relevant"
+      },
+      {
+        "id": "b",
+        "text": "Switch to a stateless design so that each session starts fresh"
+      },
+      {
+        "id": "c",
+        "text": "Raise the team's token budget cap so the full history fits in context"
+      },
+      {
+        "id": "d",
+        "text": "Strip tool results from old transcripts but keep concatenating the rest"
+      }
+    ],
+    "answer": "a",
+    "explain": "In-context memory inflates every call as state accumulates across sessions. Moving history to external storage and injecting only the relevant subset at session start keeps continuity while freeing the window. Going stateless would lose the cross-session continuity this escalation work depends on."
+  },
+  {
+    "id": "m2-20",
+    "topic": "Agent memory",
+    "q": "Your team has a detailed security-review checklist that applies only to pull requests touching authentication code. You don't want it adding context to every other session. Where should it live?",
+    "options": [
+      {
+        "id": "a",
+        "text": "In the project's CLAUDE.md so it is always available"
+      },
+      {
+        "id": "b",
+        "text": "In a Skill whose description matches auth code reviews"
+      },
+      {
+        "id": "c",
+        "text": "In the system prompt of every agent session that you start"
+      },
+      {
+        "id": "d",
+        "text": "In external storage, read back at every session start"
+      }
+    ],
+    "answer": "b",
+    "explain": "Only a Skill's name and description load at startup; its full instructions enter context when a request matches, so task-specific expertise doesn't inflate unrelated sessions. CLAUDE.md loads into every Claude Code session regardless of task, which suits always-on project standards instead."
+  },
+  {
+    "id": "m2-21",
+    "topic": "Multimodal & batch",
+    "q": "You are estimating context cost for an image pipeline. Each image is 1,400 × 700 pixels after any downscaling to the model's limits. Using the course's formula, how many visual tokens does each image cost?",
+    "options": [
+      {
+        "id": "a",
+        "text": "About 1,296 visual tokens"
+      },
+      {
+        "id": "b",
+        "text": "About 625 visual tokens"
+      },
+      {
+        "id": "c",
+        "text": "About 1,250 visual tokens"
+      },
+      {
+        "id": "d",
+        "text": "About 2,500 visual tokens"
+      }
+    ],
+    "answer": "c",
+    "explain": "Claude views images in 28×28-pixel patches, so the cost is ⌈1400/28⌉ × ⌈700/28⌉ = 50 × 25 = 1,250 visual tokens. Run the formula against the largest production image you expect before writing ingestion code; a resize step is often the cheap fix."
+  },
+  {
+    "id": "m2-22",
+    "topic": "Multimodal & batch",
+    "q": "A nightly job classifies 20,000 customer records and keeps hitting rate limits. The developer already split the list into chunks and loops over each chunk, calling the Messages API once per record. What should they do instead?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Use the Message Batches API and match results by `custom_id`"
+      },
+      {
+        "id": "b",
+        "text": "Use even smaller chunks with a pause between each of them"
+      },
+      {
+        "id": "c",
+        "text": "Stream each response so connections are released sooner"
+      },
+      {
+        "id": "d",
+        "text": "Upload each record through the Files API and send its `file_id`"
+      }
+    ],
+    "answer": "a",
+    "explain": "Chunking and looping still sends one synchronous request per item, so it hits the same rate limits. The Message Batches API takes up to 100,000 requests or 256 MB per batch at a lower per-token cost and processes them asynchronously; results come back in arbitrary order, so you match them to inputs with `custom_id`."
+  }
+]

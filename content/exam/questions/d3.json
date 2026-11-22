@@ -1,0 +1,152 @@
+[
+  {
+    "id": "x-d3-01",
+    "objective": "Claude Code Operation",
+    "q": "You start using Claude Code on an existing repository that has no CLAUDE.md. What does `/init` do?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Scans the codebase and writes a starter CLAUDE.md for you to refine"
+      },
+      {
+        "id": "b",
+        "text": "Creates `.claude/settings.json` with the team's permission rules"
+      },
+      {
+        "id": "c",
+        "text": "Indexes the repo into a vector store for retrieval during sessions"
+      },
+      {
+        "id": "d",
+        "text": "Installs the plugins listed in the project's marketplace file"
+      }
+    ],
+    "answer": "a",
+    "explain": "`/init` scans the codebase and generates a starter CLAUDE.md. Validate and refine it with test commands, framework conventions, no-touch paths and non-default style choices."
+  },
+  {
+    "id": "x-d3-02",
+    "objective": "Claude Code Operation",
+    "q": "A developer wants fewer permission prompts during routine work but still wants a safety net. Which permission mode fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`auto`, which gates actions with a classifier"
+      },
+      {
+        "id": "b",
+        "text": "`bypassPermissions`, which silences all prompts"
+      },
+      {
+        "id": "c",
+        "text": "`plan`, which blocks every edit and command"
+      },
+      {
+        "id": "d",
+        "text": "`default`, which prompts before nearly everything"
+      }
+    ],
+    "answer": "a",
+    "explain": "`auto` is classifier-gated: fewer prompts without losing the safety net. `bypassPermissions` silences every prompt and also skips the protected-path guard, so it isn't a safe way to reduce interruptions."
+  },
+  {
+    "id": "x-d3-03",
+    "objective": "Claude Code Operation",
+    "q": "You want a production deploy procedure that Claude never starts on its own, only when you type its name. How should you package it?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A file in `.claude/commands/`, the current command format"
+      },
+      {
+        "id": "b",
+        "text": "A skill with `disable-model-invocation: true` in frontmatter"
+      },
+      {
+        "id": "c",
+        "text": "A rule in CLAUDE.md asking Claude not to deploy unprompted"
+      },
+      {
+        "id": "d",
+        "text": "A `PostToolUse` hook that runs the deploy after each edit"
+      }
+    ],
+    "answer": "b",
+    "explain": "Skills are now the recommended format for commands, invoked as `/skill-name`. Setting `disable-model-invocation: true` means it runs only when called explicitly. `.claude/commands/` is the legacy format."
+  },
+  {
+    "id": "x-d3-04",
+    "objective": "Claude Code Operation",
+    "q": "You have API-specific conventions that should load only when Claude works on files under `src/api/`. Where should they go?",
+    "options": [
+      {
+        "id": "a",
+        "text": "At the top of CLAUDE.md under an API heading"
+      },
+      {
+        "id": "b",
+        "text": "A rules file with a `paths` glob in its frontmatter"
+      },
+      {
+        "id": "c",
+        "text": "A rules file saved in a `.claude/rules/api/` folder"
+      },
+      {
+        "id": "d",
+        "text": "A `SessionStart` hook that prints the conventions"
+      }
+    ],
+    "answer": "b",
+    "explain": "Rules files in `.claude/rules/` are scoped by a `paths` glob in YAML frontmatter, and load only when Claude works with matching files. The folder a rule sits in is organizational only, and CLAUDE.md loads every session."
+  },
+  {
+    "id": "x-d3-05",
+    "objective": "Claude Code Operation",
+    "q": "When does Claude Code load the project's CLAUDE.md?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Only when Claude decides the task needs it"
+      },
+      {
+        "id": "b",
+        "text": "In full at every session start, before your first message"
+      },
+      {
+        "id": "c",
+        "text": "Only when you run `/init` at the start of a session"
+      },
+      {
+        "id": "d",
+        "text": "Only when files in the project root are edited"
+      }
+    ],
+    "answer": "b",
+    "explain": "CLAUDE.md is read from the project root at every session start, and its full contents are loaded before your first message, unconditionally. That is why its size dilutes every rule in it."
+  },
+  {
+    "id": "x-d3-06",
+    "objective": "Claude Code Operation",
+    "q": "You want a script to check required environment variables whenever a Claude Code session starts or resumes. Which hook event fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`SessionStart`"
+      },
+      {
+        "id": "b",
+        "text": "`PostToolUse`"
+      },
+      {
+        "id": "c",
+        "text": "`Stop`"
+      },
+      {
+        "id": "d",
+        "text": "`Notification`"
+      }
+    ],
+    "answer": "a",
+    "explain": "`SessionStart` fires when a session starts or resumes, and is used to set up state, validate env vars and check services. `Stop` fires when the model finishes responding, `PostToolUse` after a tool call."
+  }
+]

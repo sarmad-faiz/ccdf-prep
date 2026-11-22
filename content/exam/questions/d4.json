@@ -1,0 +1,102 @@
+[
+  {
+    "id": "x-d4-01",
+    "objective": "Debugging and Error Handling",
+    "q": "After a key rotation, every request fails with HTTP 403. Your wrapper keeps retrying with exponential backoff. What is wrong?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Nothing; backoff will succeed once the new key propagates"
+      },
+      {
+        "id": "b",
+        "text": "403 is terminal; fix the credentials or permissions instead"
+      },
+      {
+        "id": "c",
+        "text": "The backoff is too short; 403s need much longer waits"
+      },
+      {
+        "id": "d",
+        "text": "403 means overload, so it should switch to a fallback model"
+      }
+    ],
+    "answer": "b",
+    "explain": "Ask whether the exact same request could plausibly work later. A 403 is a permissions failure, so it is terminal and retrying can't help. Retriable errors are 429, 529 and transient 5xx."
+  },
+  {
+    "id": "x-d4-02",
+    "objective": "Debugging and Error Handling",
+    "q": "Under peak load you get HTTP 429 responses with a `retry-after` header. Your code retries immediately in a tight loop, and the errors get worse. What should it do?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Retry immediately but from several threads to spread load"
+      },
+      {
+        "id": "b",
+        "text": "Honor `retry-after`, back off with jitter, and cap retries"
+      },
+      {
+        "id": "c",
+        "text": "Treat 429 as terminal and fail every request right away"
+      },
+      {
+        "id": "d",
+        "text": "Switch to a larger model, which has a separate rate limit"
+      }
+    ],
+    "answer": "b",
+    "explain": "429 is retriable, but tight-loop retries deepen the rate limit. Honor `retry-after` when it is present, otherwise use exponential backoff with jitter, and cap the attempts with a clean fallback."
+  },
+  {
+    "id": "x-d4-03",
+    "objective": "Debugging and Error Handling",
+    "q": "A support answer is wrong. The trace shows the retrieval step returned an empty list, so the prompt sent to Claude had no policy text. Where is the fault?",
+    "options": [
+      {
+        "id": "a",
+        "text": "In the model, which should have said it lacked the policy"
+      },
+      {
+        "id": "b",
+        "text": "In the retrieval step, upstream of the model call"
+      },
+      {
+        "id": "c",
+        "text": "In the prompt wording, which needs a stronger instruction"
+      },
+      {
+        "id": "d",
+        "text": "In the model choice, since a larger model would know the policy"
+      }
+    ],
+    "answer": "b",
+    "explain": "The trace shows each step's inputs and outputs, and here the break happened at retrieval, before the model was called. A factual failure on retrieved content points at the retrieval step; changing the prompt or model would not fix a missing document."
+  },
+  {
+    "id": "x-d4-04",
+    "objective": "Debugging and Error Handling",
+    "q": "Your error handler meets an error code you have never seen and can't tell whether it is retriable. What does the course recommend?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Retry it with backoff, since most errors turn out to be transient"
+      },
+      {
+        "id": "b",
+        "text": "Treat it as terminal so it fails loudly until you understand it"
+      },
+      {
+        "id": "c",
+        "text": "Return an empty result so the user isn't shown an error message"
+      },
+      {
+        "id": "d",
+        "text": "Retry it forever, since giving up would lose the user's request"
+      }
+    ],
+    "answer": "b",
+    "explain": "When unsure, treat it as terminal. A wrongly terminal error fails loudly and gets fixed, while a wrongly retriable one hammers the service and burns the retry budget. Never hide a failure as an empty result."
+  }
+]

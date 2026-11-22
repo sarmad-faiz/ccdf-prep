@@ -1,0 +1,377 @@
+[
+  {
+    "id": "m5-01",
+    "topic": "Packaging for reuse",
+    "q": "Months after an engagement, a second team picks up an agent template labelled reusable. It runs, but they end up rewriting it from scratch. Which missing pieces are the warning signs that it was never packaged for reuse?",
+    "options": [
+      {
+        "id": "a",
+        "text": "No CI pipeline, no changelog, and no semantic version tag"
+      },
+      {
+        "id": "b",
+        "text": "No type hints, no linting config, and no code-owners file"
+      },
+      {
+        "id": "c",
+        "text": "No parameters, no documented assumptions, and no bundled eval"
+      },
+      {
+        "id": "d",
+        "text": "No usage guide, no architecture diagram, and no license file"
+      }
+    ],
+    "answer": "c",
+    "explain": "A template that runs is not yet packaged. The warning signs are no parameters where customer-specific values belong, no documentation of its assumptions, and no bundled eval to prove it still works in a new context. CI, typing or diagrams are useful, but their absence is not what forces the next team to rebuild."
+  },
+  {
+    "id": "m5-02",
+    "topic": "Packaging for reuse",
+    "q": "You are packaging a working MCP server so other teams can install it in their own environments. What does correct packaging require?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Document each tool input and let the installing team set the scope"
+      },
+      {
+        "id": "b",
+        "text": "Ship the scopes your engagement used so it works out of the box"
+      },
+      {
+        "id": "c",
+        "text": "Provide the source so each team edits the scope constants directly"
+      },
+      {
+        "id": "d",
+        "text": "Expose every tool with full access and let teams turn off extras"
+      }
+    ],
+    "answer": "a",
+    "explain": "An MCP server package documents each tool's inputs and lets the installing team control the scope, so it installs into a new environment without code edits. Shipping your engagement's scopes, or expecting teams to edit constants, turns configuration back into rewriting."
+  },
+  {
+    "id": "m5-03",
+    "topic": "Packaging for reuse",
+    "q": "Your accelerator demos well but stalls at a regulated customer's first security review. The reviewer asks what data it touches, what identity it acts under, and what log it leaves. What should you have done?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Answered those questions in a meeting once the demo was approved"
+      },
+      {
+        "id": "b",
+        "text": "Pointed the reviewer to the eval suite as proof the asset is safe"
+      },
+      {
+        "id": "c",
+        "text": "Planned to add those details in a version after the review passes"
+      },
+      {
+        "id": "d",
+        "text": "Bundled the data touched, the identity and the log in the package"
+      }
+    ],
+    "answer": "d",
+    "explain": "For every asset type, the data touched, the identity acted under and the log of what the asset did are part of the package. An eval proves the asset works, but it does not answer the reviewer's questions about data, identity and audit."
+  },
+  {
+    "id": "m5-04",
+    "topic": "Contributing back",
+    "q": "During an engagement you built a customer-service application and want to share it, UI and deployment scripts included, through the Claude Cookbook. What is the right move?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Submit the whole application with a detailed README for reviewers"
+      },
+      {
+        "id": "b",
+        "text": "Strip out the reusable pattern and submit it as a focused example"
+      },
+      {
+        "id": "c",
+        "text": "Submit the whole application with end-to-end tests for each part"
+      },
+      {
+        "id": "d",
+        "text": "Submit the whole application but mark the UI and scripts optional"
+      }
+    ],
+    "answer": "b",
+    "explain": "The Cookbook is set up to review focused, self-contained reference implementations, so a full multi-component application is a channel mismatch and stalls however well it is documented or tested. Extract the reusable conversation-handling pattern, strip the customer specifics, and submit that."
+  },
+  {
+    "id": "m5-05",
+    "topic": "Contributing back",
+    "q": "Your pull request to an open-source tool has had no review for three weeks. The code is correct and you use it every day. What is most likely to get it reviewed?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Add inline comments explaining the more complex parts of the code"
+      },
+      {
+        "id": "b",
+        "text": "Extend it to cover more use cases so it helps more people"
+      },
+      {
+        "id": "c",
+        "text": "Add a runnable example, a test, and a short assumptions note"
+      },
+      {
+        "id": "d",
+        "text": "Add a benchmark showing it runs faster than the current approach"
+      }
+    ],
+    "answer": "c",
+    "explain": "Maintainers accept what they can verify. A runnable example, a test proving the behavior and a statement of assumptions leave nothing to reverse-engineer. Widening the scope does the opposite, because a sprawling change makes the reviewer reconstruct more of your intent."
+  },
+  {
+    "id": "m5-06",
+    "topic": "Contributing back",
+    "q": "You want to submit a one-line fix to an existing Cookbook example. The fix comes from code you wrote during a customer engagement. What must be cleared before the technical review even matters?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Confirm you have the right to contribute it and attribute prior work"
+      },
+      {
+        "id": "b",
+        "text": "Write a test suite covering the whole Cookbook example end to end"
+      },
+      {
+        "id": "c",
+        "text": "Reduce the change to a single focused pattern a reviewer can read"
+      },
+      {
+        "id": "d",
+        "text": "Get the maintainer to approve the design before you open the PR"
+      }
+    ],
+    "answer": "a",
+    "explain": "Licensing and attribution decide whether a contribution can be accepted at all, and engagement code may carry constraints on where it can go, so the rights check is the first gate. A one-line fix is already focused. If you cannot clear the constraint, do not contribute it; escalate to the owner."
+  },
+  {
+    "id": "m5-07",
+    "topic": "Requirements & lifecycle",
+    "q": "A hospital wants an agent that drafts discharge summaries for clinicians. National regulation requires patient data to stay in the country, and each draft is reviewed before it is saved. Which of these is an infrastructure requirement?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Each draft summary is approved by a clinician before it is saved"
+      },
+      {
+        "id": "b",
+        "text": "The agent should produce summaries that are fast and accurate"
+      },
+      {
+        "id": "c",
+        "text": "The agent drafts every summary from the approved hospital template"
+      },
+      {
+        "id": "d",
+        "text": "Patient data is processed within the country the regulation names"
+      }
+    ],
+    "answer": "d",
+    "explain": "Infrastructure requirements are non-functional constraints such as latency, scale, residency and identity, and where data is processed is residency. Clinician approval and the template are functional behaviors, and 'fast and accurate' is too vague to check."
+  },
+  {
+    "id": "m5-08",
+    "topic": "Requirements & lifecycle",
+    "q": "On a regulated engagement, a teammate wants to start building the agent before anyone has confirmed that the chosen platform meets the customer's residency requirement. Under lifecycle gating, what is the right call?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Go ahead, since residency is verified when the version is deployed"
+      },
+      {
+        "id": "b",
+        "text": "Hold the build until the platform is shown to meet the residency rule"
+      },
+      {
+        "id": "c",
+        "text": "Go ahead, since residency can be monitored during the operate phase"
+      },
+      {
+        "id": "d",
+        "text": "Go ahead, as long as the test phase adds an eval covering residency"
+      }
+    ],
+    "answer": "b",
+    "explain": "A gate is where a regulated engagement keeps control: you do not move from design to build until the platform satisfies the residency requirement. Pushing the check later is how a finished build gets rejected at review and has to be rebuilt."
+  },
+  {
+    "id": "m5-09",
+    "topic": "Deployment & versioning",
+    "q": "Your production app calls `model=\"opus\"`. With no change to your code, the parser starts failing with `KeyError \"summary\"`, and there is no earlier version to roll back to. Which fix addresses the root cause?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Pin the full model ID, keep the prior version, gate updates on evals"
+      },
+      {
+        "id": "b",
+        "text": "Make the parser tolerate missing keys so shape changes cannot break it"
+      },
+      {
+        "id": "c",
+        "text": "Add retries so a failed parse is resent until the output shape matches"
+      },
+      {
+        "id": "d",
+        "text": "Move to a newer alias so the app always gets the latest model fixes"
+      }
+    ],
+    "answer": "a",
+    "explain": "An alias is a moving target, so the upstream update silently changed the output. Pinning the full model ID makes updates deliberate, keeping the prior pinned version turns a regression into a rollback, and the eval gate catches shape changes before production. Hardening the parser is a hotfix that leaves the unpinned deployment in place."
+  },
+  {
+    "id": "m5-10",
+    "topic": "Deployment & versioning",
+    "q": "A customer runs on AWS, already holds its compliance posture there, and requires that data stay inside its AWS boundary. Which deployment fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Claude Platform on AWS, accessed through the customer's AWS account"
+      },
+      {
+        "id": "b",
+        "text": "The first-party Claude API, called with the customer's own API key"
+      },
+      {
+        "id": "c",
+        "text": "Claude in Amazon Bedrock, under AWS identity in the customer's account"
+      },
+      {
+        "id": "d",
+        "text": "Microsoft Foundry, with the model hosted on Anthropic infrastructure"
+      }
+    ],
+    "answer": "c",
+    "explain": "Bedrock uses AWS identity and keeps data inside the customer's configured AWS boundary, matching their existing compliance posture. Claude Platform on AWS is accessed through the AWS account, but its inference is Anthropic-operated outside the AWS boundary, so it does not meet this requirement."
+  },
+  {
+    "id": "m5-11",
+    "topic": "Deployment & versioning",
+    "q": "A new model version is ready for your production agent. How should you promote it?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Switch all traffic at once and watch the error rate for regressions"
+      },
+      {
+        "id": "b",
+        "text": "Run the eval on the new version alone and promote it if it scores well"
+      },
+      {
+        "id": "c",
+        "text": "Let the alias pick up the new version and roll back on complaints"
+      },
+      {
+        "id": "d",
+        "text": "Send part of the traffic to it and compare against the pinned baseline"
+      }
+    ],
+    "answer": "d",
+    "explain": "The eval suite becomes the deployment gate: route a portion of traffic to the new version, compare its results with the pinned baseline score, then promote or roll back. Scoring the new version on its own gives you nothing to compare against, so a regression can slip through."
+  },
+  {
+    "id": "m5-12",
+    "topic": "Comparing platforms",
+    "q": "Your team picked its usual platform for a regulated customer in `eu-west` that requires EU-only data processing. Latency measured from a developer laptop looked fine, but the security review rejected the placement because data was processed outside the EU. What is the targeted fix?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Tune the integration to cut the latency measured from the laptop"
+      },
+      {
+        "id": "b",
+        "text": "Pick a platform whose region meets EU residency; remeasure from eu-west"
+      },
+      {
+        "id": "c",
+        "text": "Add caching on the current platform to reduce the cost of each call"
+      },
+      {
+        "id": "d",
+        "text": "Keep the platform and add audit logs showing where data is processed"
+      }
+    ],
+    "answer": "b",
+    "explain": "The platform was picked on familiarity, and for a regulated customer residency is pass-or-fail. The fix is a platform whose regional deployment meets the rule, with latency measured from the customer's actual region and payload. Laptop latency and caching do not touch the reason the placement was rejected."
+  },
+  {
+    "id": "m5-13",
+    "topic": "Comparing platforms",
+    "q": "Two candidate platforms have almost the same per-token rate. Procurement asks which one will cost less for the actual workload. What should you compare?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Total cost per call, including egress, platform fees and integration"
+      },
+      {
+        "id": "b",
+        "text": "The per-token rate, since that is what drives total spend at scale"
+      },
+      {
+        "id": "c",
+        "text": "Published list prices for input and output tokens on each platform"
+      },
+      {
+        "id": "d",
+        "text": "Token counts per call, since the platform using fewer is cheaper"
+      }
+    ],
+    "answer": "a",
+    "explain": "Per-token rates are broadly aligned across platforms; total cost moves on data egress, platform fees and integration effort. Instrument total cost per call on each platform, because the cheapest token is not always the cheapest workload."
+  },
+  {
+    "id": "m5-14",
+    "topic": "Trust boundaries",
+    "q": "Your app wires an API entry point to a Claude Code task that fetches a customer web page, then passes the page content straight into the next Claude call's prompt. Each component passed its own tests. What is the problem?",
+    "options": [
+      {
+        "id": "a",
+        "text": "None, since components that pass their own tests form a safe chain"
+      },
+      {
+        "id": "b",
+        "text": "A Claude Code task should never fetch external content in a workflow"
+      },
+      {
+        "id": "c",
+        "text": "The seam is unmarked, so fetched content can cross as instructions"
+      },
+      {
+        "id": "d",
+        "text": "The next call needs a larger context window to hold the fetched page"
+      }
+    ],
+    "answer": "c",
+    "explain": "Content fetched by the Claude Code task is untrusted once it leaves that component. Mark the seam as a trust boundary and put a control there that treats the content as data, not instructions. Passing tests in isolation says nothing about the seam between components."
+  },
+  {
+    "id": "m5-15",
+    "topic": "Trust boundaries",
+    "q": "In a multi-component app, the API orchestrator and the Claude Code task are tightly scoped, but the MCP server that reaches the customer database runs with broad admin credentials for convenience. Which statement is true?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Tight scoping on the other components offsets the broad MCP server"
+      },
+      {
+        "id": "b",
+        "text": "Broad access is acceptable as long as the MCP server logs each call"
+      },
+      {
+        "id": "c",
+        "text": "Least privilege matters mainly at the entry point where requests arrive"
+      },
+      {
+        "id": "d",
+        "text": "The app is only as contained as this most privileged seam allows"
+      }
+    ],
+    "answer": "d",
+    "explain": "Least privilege applies to the whole application: one component scoped too broadly becomes the weak point even when every other component is scoped correctly. The MCP server should log its access, but logging does not replace scoping it to least privilege."
+  }
+]

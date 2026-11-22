@@ -1,0 +1,466 @@
+[
+  {
+    "id": "x-d8-01",
+    "objective": "Tool Implementation",
+    "q": "A search tool marks all eight of its parameters as required, including optional filters. Claude starts filling the filters with made-up values. What should you change?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Mark only essential fields required and give the rest defaults"
+      },
+      {
+        "id": "b",
+        "text": "Add a system prompt line telling Claude not to guess values"
+      },
+      {
+        "id": "c",
+        "text": "Split the tool into eight tools with one parameter each"
+      },
+      {
+        "id": "d",
+        "text": "Turn on extended thinking so Claude reasons about filters"
+      }
+    ],
+    "answer": "a",
+    "explain": "Mark a field required only if the call makes no sense without it. When everything is required, Claude fabricates values; optional fields with sensible defaults let it omit them instead of guessing."
+  },
+  {
+    "id": "x-d8-02",
+    "objective": "Tool Implementation",
+    "q": "A tool's entire description reads \"Gets data.\" Claude calls it at the wrong times. What does a good description contain?",
+    "options": [
+      {
+        "id": "a",
+        "text": "One word naming the data source, to keep tokens low"
+      },
+      {
+        "id": "b",
+        "text": "What it does, when to use it, when not to, what it returns"
+      },
+      {
+        "id": "c",
+        "text": "The full source code of the function it calls"
+      },
+      {
+        "id": "d",
+        "text": "A list of every user question it might help answer"
+      }
+    ],
+    "answer": "b",
+    "explain": "The description decides selection. Aim for 3–4 sentences covering what the tool does, when to use it, when not to use it, and what it returns, with input examples where the format matters."
+  },
+  {
+    "id": "x-d8-03",
+    "objective": "Tool Implementation",
+    "q": "Claude must get the weather for Paris and Tokyo, and must also call `lookup_user` and then `get_orders` with the returned user ID. How should these calls run?",
+    "options": [
+      {
+        "id": "a",
+        "text": "All four in parallel in one turn, so the task finishes fastest"
+      },
+      {
+        "id": "b",
+        "text": "Weather calls and `lookup_user` together; `get_orders` in a later turn"
+      },
+      {
+        "id": "c",
+        "text": "All four one at a time, since parallel tool calls are unsafe"
+      },
+      {
+        "id": "d",
+        "text": "`lookup_user` and `get_orders` together; weather calls afterwards"
+      }
+    ],
+    "answer": "b",
+    "explain": "Independent calls can go out as multiple `tool_use` blocks in one turn and run concurrently, which current models do by default. `get_orders` depends on the user ID, so it must come in a later turn after `lookup_user` returns."
+  },
+  {
+    "id": "x-d8-04",
+    "objective": "MCP Server Development",
+    "q": "Your MCP server should expose a fixed company glossary that the client can fetch into context by address, without the model making a tool call. Which primitive fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A tool that returns the glossary when called"
+      },
+      {
+        "id": "b",
+        "text": "A resource with a fixed (direct) address"
+      },
+      {
+        "id": "c",
+        "text": "A prompt template that includes the glossary"
+      },
+      {
+        "id": "d",
+        "text": "A hook that injects the glossary at startup"
+      }
+    ],
+    "answer": "b",
+    "explain": "A resource is read-only data the client fetches by address, with no tool call. Direct resources have a fixed address; templated ones take a parameter in the address. Client support varies, so verify it."
+  },
+  {
+    "id": "x-d8-05",
+    "objective": "MCP Server Development",
+    "q": "You build a small MCP server that only you will use, reading files on your own laptop. Which transport and scope fit?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`stdio`, in local scope"
+      },
+      {
+        "id": "b",
+        "text": "HTTP, in project scope"
+      },
+      {
+        "id": "c",
+        "text": "HTTP, in enterprise scope"
+      },
+      {
+        "id": "d",
+        "text": "`stdio`, in project scope"
+      }
+    ],
+    "answer": "a",
+    "explain": "Match transport to where the server runs, then pick scope. A local personal tool runs as a `stdio` subprocess, and local scope keeps it out of the shared `.mcp.json`. Shared team servers use HTTP in project scope."
+  },
+  {
+    "id": "x-d8-06",
+    "objective": "MCP Server Development",
+    "q": "Every client team writes its own version of an \"incident summary\" instruction, and quality varies. What MCP feature lets one vetted version serve them all?",
+    "options": [
+      {
+        "id": "a",
+        "text": "An MCP prompt, a template invoked by name"
+      },
+      {
+        "id": "b",
+        "text": "An MCP resource holding sample summaries"
+      },
+      {
+        "id": "c",
+        "text": "An MCP tool that writes the summary itself"
+      },
+      {
+        "id": "d",
+        "text": "A project-scoped `.mcp.json` comment block"
+      }
+    ],
+    "answer": "a",
+    "explain": "MCP prompts are vetted instruction templates invoked by name: one place to maintain them and the same quality for every client. Tools are actions the model calls; resources are read-only data."
+  },
+  {
+    "id": "x-d8-07",
+    "objective": "Agentic Customization",
+    "q": "You need Claude to work with Jira, and a well-maintained Jira MCP server already covers every operation you need. What does the course suggest?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Write manual tool schemas anyway, for full control"
+      },
+      {
+        "id": "b",
+        "text": "Use the MCP server rather than rebuilding the tools"
+      },
+      {
+        "id": "c",
+        "text": "Put the Jira API docs into CLAUDE.md for Claude to follow"
+      },
+      {
+        "id": "d",
+        "text": "Create a Skill that calls the Jira REST API from bash"
+      }
+    ],
+    "answer": "b",
+    "explain": "Choose MCP when a well-maintained server covers the operations you need. Manual schemas make sense when no server covers it or you need control over description quality; you can also combine MCP with an allowlist and tuned descriptions."
+  },
+  {
+    "id": "x-d8-08",
+    "objective": "Agentic Customization",
+    "q": "In which two situations does the course favor writing manual tool schemas over using an MCP server? (Choose two.)",
+    "options": [
+      {
+        "id": "a",
+        "text": "No existing MCP server covers the operation you need"
+      },
+      {
+        "id": "b",
+        "text": "You need tight control over tool description quality"
+      },
+      {
+        "id": "c",
+        "text": "You have more than three tools to define in total"
+      },
+      {
+        "id": "d",
+        "text": "You want tool definitions that cost no context at all"
+      },
+      {
+        "id": "e",
+        "text": "The tools must be reached over a remote connection"
+      }
+    ],
+    "answer": [
+      "a",
+      "b"
+    ],
+    "explain": "Manual schemas fit when no server covers the need or when you need description-quality control. Every tool definition costs context, manual or MCP, and remote access is exactly what HTTP MCP servers provide."
+  },
+  {
+    "id": "x-d8-09",
+    "objective": "Tool Implementation",
+    "q": "The API rejects your request with \"tool_result block references unknown tool_use_id\". What is the cause?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The `tool_use_id` doesn't exactly match the `tool_use` block's ID"
+      },
+      {
+        "id": "b",
+        "text": "The tool took too long to run, so its ID expired"
+      },
+      {
+        "id": "c",
+        "text": "The tool returned an error, so `is_error` must be false"
+      },
+      {
+        "id": "d",
+        "text": "The tool isn't listed in the system prompt"
+      }
+    ],
+    "answer": "a",
+    "explain": "Each `tool_result` must carry a `tool_use_id` that exactly matches the `tool_use` block it answers. A mismatch gives this validation error; it is structural, not fixable by prompting."
+  },
+  {
+    "id": "x-d8-10",
+    "objective": "Tool Implementation",
+    "q": "A tool description says \"Don't call this if the user already gave their account number.\" After you start truncating old turns, Claude calls it again even though the number was given. Why?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Exclusion conditions rely on full history, and truncation removed it"
+      },
+      {
+        "id": "b",
+        "text": "Descriptions are ignored once a conversation passes ten turns"
+      },
+      {
+        "id": "c",
+        "text": "The tool needs `strict: true` to honor its exclusion condition"
+      },
+      {
+        "id": "d",
+        "text": "Truncation resets the tool's description to its default"
+      }
+    ],
+    "answer": "a",
+    "explain": "Exclusion conditions depend on the full conversation history. When earlier turns are truncated, the evidence is gone and the exclusion logic silently fails."
+  },
+  {
+    "id": "x-d8-11",
+    "objective": "Tool Implementation",
+    "q": "You added boundary language to two overlapping tools' descriptions, but Claude still can't tell them apart. What does the course suggest next?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Merge them into one tool with a type parameter"
+      },
+      {
+        "id": "b",
+        "text": "Give both tools identical descriptions"
+      },
+      {
+        "id": "c",
+        "text": "Mark every parameter on both as required"
+      },
+      {
+        "id": "d",
+        "text": "Remove both tools and rely on the prompt"
+      }
+    ],
+    "answer": "a",
+    "explain": "Both overlapping tools need the boundary in their descriptions. If they are still indistinguishable, merge them into one tool with a type parameter."
+  },
+  {
+    "id": "x-d8-12",
+    "objective": "Tool Implementation",
+    "q": "Your tool executor can safely handle only one tool call per turn. How do you stop Claude from sending several at once?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Set `disable_parallel_tool_use`"
+      },
+      {
+        "id": "b",
+        "text": "Set `strict: true` on each tool"
+      },
+      {
+        "id": "c",
+        "text": "Lower `max_tokens` on the request"
+      },
+      {
+        "id": "d",
+        "text": "Register only one tool in total"
+      }
+    ],
+    "answer": "a",
+    "explain": "Current models default to parallel calls when subtasks are independent. `disable_parallel_tool_use` forces one call per turn."
+  },
+  {
+    "id": "x-d8-13",
+    "objective": "MCP Server Development",
+    "q": "How does an MCP client learn which tools a server offers?",
+    "options": [
+      {
+        "id": "a",
+        "text": "It sends a `ListToolsRequest` and passes the list to Claude"
+      },
+      {
+        "id": "b",
+        "text": "It reads the tool list from the project's CLAUDE.md"
+      },
+      {
+        "id": "c",
+        "text": "Claude guesses the tools from the server's name"
+      },
+      {
+        "id": "d",
+        "text": "The server emails its tool list during install"
+      }
+    ],
+    "answer": "a",
+    "explain": "The client sends a `ListToolsRequest`, receives the tool list and passes it to Claude, where the tools are indistinguishable from hand-written ones. The tool-use loop and pairing rules stay the same."
+  },
+  {
+    "id": "x-d8-14",
+    "objective": "MCP Server Development",
+    "q": "Your repo's `.mcp.json` registers a project-scoped `stdio` server started with `npx`. It works for you but fails for a teammate who has no Node installed. Why?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Each clone runs the server as its own local subprocess"
+      },
+      {
+        "id": "b",
+        "text": "Project-scoped servers only run for the repo's owner"
+      },
+      {
+        "id": "c",
+        "text": "`stdio` servers need an OAuth sign-in on every machine"
+      },
+      {
+        "id": "d",
+        "text": "`.mcp.json` is ignored unless it sits in the home folder"
+      }
+    ],
+    "answer": "a",
+    "explain": "A project-scoped `stdio` server makes every clone spawn its own subprocess, so each teammate needs the runtime, such as Node for `npx`. A server meant for a team is better hosted over HTTP."
+  },
+  {
+    "id": "x-d8-15",
+    "objective": "MCP Server Development",
+    "q": "You're building a new remote MCP server for many clients. Which transport should it use?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Streamable HTTP"
+      },
+      {
+        "id": "b",
+        "text": "SSE-only transport"
+      },
+      {
+        "id": "c",
+        "text": "`stdio` over SSH"
+      },
+      {
+        "id": "d",
+        "text": "A shared folder"
+      }
+    ],
+    "answer": "a",
+    "explain": "Remote servers use Streamable HTTP; the SSE-only transport is deprecated. `stdio` is for local servers the app spawns as a subprocess."
+  },
+  {
+    "id": "x-d8-16",
+    "objective": "Agentic Customization",
+    "q": "Many different client apps need live data from your internal inventory system. Which option lets you build the integration once and reuse it everywhere?",
+    "options": [
+      {
+        "id": "a",
+        "text": "An MCP server that every MCP client can connect to"
+      },
+      {
+        "id": "b",
+        "text": "A Skill copied into each app's repository"
+      },
+      {
+        "id": "c",
+        "text": "A section of CLAUDE.md describing the inventory API"
+      },
+      {
+        "id": "d",
+        "text": "A custom tool rewritten inside each application"
+      }
+    ],
+    "answer": "a",
+    "explain": "MCP moves tool definitions and execution into a separate server: build it once and every MCP client can use it. Skills hold procedures, not live connections."
+  },
+  {
+    "id": "x-d8-17",
+    "objective": "Agentic Customization",
+    "q": "Besides tools, which two primitives can an MCP server expose? (Choose two.)",
+    "options": [
+      {
+        "id": "a",
+        "text": "Resources"
+      },
+      {
+        "id": "b",
+        "text": "Prompts"
+      },
+      {
+        "id": "c",
+        "text": "Hooks"
+      },
+      {
+        "id": "d",
+        "text": "Skills"
+      },
+      {
+        "id": "e",
+        "text": "Subagents"
+      }
+    ],
+    "answer": [
+      "a",
+      "b"
+    ],
+    "explain": "An MCP server exposes tools (actions the model calls), resources (read-only data fetched by address) and prompts (vetted templates invoked by name). Hooks, skills and subagents are Claude Code concepts."
+  },
+  {
+    "id": "x-d8-18",
+    "objective": "Agentic Customization",
+    "q": "Using the API MCP connector, you want the model never to see one dangerous tool from a server, while the server's other tools stay available. What do you set?",
+    "options": [
+      {
+        "id": "a",
+        "text": "`enabled: false` for that tool in the `mcp_toolset` configs"
+      },
+      {
+        "id": "b",
+        "text": "A permission allow rule for the server's other tools"
+      },
+      {
+        "id": "c",
+        "text": "A line in the system prompt telling Claude to avoid it"
+      },
+      {
+        "id": "d",
+        "text": "`strict: true` on the dangerous tool's definition"
+      }
+    ],
+    "answer": "a",
+    "explain": "In `mcp_toolset`, the per-tool `enabled` flag controls whether the model sees a tool (context and scope). Permission rules govern whether an exposed tool may run. They are separate levers, often combined."
+  }
+]

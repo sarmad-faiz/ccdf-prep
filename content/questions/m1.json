@@ -1,0 +1,377 @@
+[
+  {
+    "id": "m1-01",
+    "topic": "LLM behavior",
+    "q": "You are estimating the monthly cost of a document-summary feature. A teammate counts the words in sample documents and converts them using a characters-per-token ratio they measured on an earlier model generation. What is the soundest correction?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Keep the word count, since the API bills input by words and only output by tokens"
+      },
+      {
+        "id": "b",
+        "text": "Reuse the old ratio, since every Claude generation shares the same tokenizer"
+      },
+      {
+        "id": "c",
+        "text": "Count in tokens and confirm the current model's tokenizer behavior at build time"
+      },
+      {
+        "id": "d",
+        "text": "Count only the documents, since system prompts and tool definitions are not billed"
+      }
+    ],
+    "answer": "c",
+    "explain": "Tokens are the unit of both pricing and the context window, and the characters-per-token average depends on the tokenizer, which differs between model generations. Counting only the documents also underestimates: the system prompt, history, tool definitions, tool results and output all count."
+  },
+  {
+    "id": "m1-02",
+    "topic": "LLM behavior",
+    "q": "A request's input fits comfortably in the context window, but the model's answer is long and reaches the window's ceiling partway through generation. On current models, what does your code receive?",
+    "options": [
+      {
+        "id": "a",
+        "text": "A validation error, raised before any output is returned to your code"
+      },
+      {
+        "id": "b",
+        "text": "The full output, with the window expanded to make room"
+      },
+      {
+        "id": "c",
+        "text": "An error mid-generation and none of the text produced so far"
+      },
+      {
+        "id": "d",
+        "text": "Partial output plus a `model_context_window_exceeded` stop reason"
+      }
+    ],
+    "answer": "d",
+    "explain": "When a request fits on input but hits the ceiling during generation, current models stop and return what they generated with the `model_context_window_exceeded` stop reason rather than raising an error. A validation error before generation is the other edge case: input that is already larger than the window."
+  },
+  {
+    "id": "m1-03",
+    "topic": "LLM behavior",
+    "q": "Your multi-turn assistant passed every test with short inputs. In production, long sessions start failing as conversation history and tool results pile up. Which change addresses the cause?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Have the application trim or summarize history before each call"
+      },
+      {
+        "id": "b",
+        "text": "Lower the temperature so each response uses fewer tokens per turn"
+      },
+      {
+        "id": "c",
+        "text": "Switch to streaming so the history is sent in smaller pieces"
+      },
+      {
+        "id": "d",
+        "text": "Rely on the API to drop the oldest turns once the window fills"
+      }
+    ],
+    "answer": "a",
+    "explain": "The context window is a fixed token budget holding the system prompt, full conversation, tool results and output, so it fills as sessions grow. The window does not silently drop old turns; keeping a long session running requires the application to trim or summarize history before each call."
+  },
+  {
+    "id": "m1-04",
+    "topic": "LLM behavior",
+    "q": "To make a classifier more consistent, you add `temperature: 0` to requests sent to one of the newest Claude models. Every call now returns a 400 error. What should you do?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Replace `temperature` with `top_p`, which those models still accept"
+      },
+      {
+        "id": "b",
+        "text": "Remove the sampling parameter and steer behavior through the prompt"
+      },
+      {
+        "id": "c",
+        "text": "Raise `temperature` slightly above zero, since only zero is rejected"
+      },
+      {
+        "id": "d",
+        "text": "Keep `temperature` and also set `top_k`, since both must be sent"
+      }
+    ],
+    "answer": "b",
+    "explain": "The newest Claude models do not accept non-default sampling parameters: setting `temperature`, `top_p` or `top_k` returns a 400 error, and behavior is steered through prompting instead. Swapping to `top_p` fails the same way."
+  },
+  {
+    "id": "m1-05",
+    "topic": "LLM behavior",
+    "q": "A CI test for a summarization feature compares each response to a stored expected string. It fails intermittently, even though the summaries it rejects look correct. What is the best fix?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Set temperature to 0, which guarantees identical text on every single call"
+      },
+      {
+        "id": "b",
+        "text": "Retry the call until the response matches the stored string exactly"
+      },
+      {
+        "id": "c",
+        "text": "Assert on required properties and use a model-graded eval for meaning"
+      },
+      {
+        "id": "d",
+        "text": "Shorten the prompt so the model has fewer ways to word the summary"
+      }
+    ],
+    "answer": "c",
+    "explain": "Because output is sampled, identical inputs do not guarantee identical text, so exact-match tests are inconsistent. Assert on properties such as a required field being present or the structure parsing, and use a model-graded eval to judge meaning; temperature 0 makes output more repeatable but does not guarantee it."
+  },
+  {
+    "id": "m1-06",
+    "topic": "Models & reasoning",
+    "q": "You are starting a new production feature and have not run any evals yet. Following the course's guidance on model tiers, which model should you start with?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Fable, then step down a tier whenever the bill grows too large"
+      },
+      {
+        "id": "b",
+        "text": "Haiku, then move up a tier only if users report quality problems"
+      },
+      {
+        "id": "c",
+        "text": "Opus, since it is the standard tier for production workloads"
+      },
+      {
+        "id": "d",
+        "text": "Sonnet, then move up only if an eval shows it misses your bar"
+      }
+    ],
+    "answer": "d",
+    "explain": "Sonnet is the balanced default for most production workloads. Move up a tier only when an eval shows the current tier missing your quality bar, and down to Haiku only when an eval shows the quality drop is acceptable, not on user complaints or cost alone."
+  },
+  {
+    "id": "m1-07",
+    "topic": "Models & reasoning",
+    "q": "A ticket router sorts messages into five fixed categories using a capable model with reasoning at a high effort setting. Costs are high, and a colleague says the only way to cut reasoning is to switch to a smaller model. What is accurate?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Reasoning is set per request apart from model choice, and it is wasted on classification"
+      },
+      {
+        "id": "b",
+        "text": "Reasoning is tied to the model, so a smaller model is the only way to reduce it"
+      },
+      {
+        "id": "c",
+        "text": "Reasoning helps classification the most, so keep the high effort and just accept the cost"
+      },
+      {
+        "id": "d",
+        "text": "Reasoning mode is fixed per account, so it has to be changed for every workload"
+      }
+    ],
+    "answer": "a",
+    "explain": "Model choice and reasoning mode are independent levers: the model picks the family member, while reasoning is configured per request. Reasoning earns its cost on hard, multi-step problems and is wasted on lookups and classification, so you can reduce it without changing models."
+  },
+  {
+    "id": "m1-08",
+    "topic": "Models & reasoning",
+    "q": "Code written for an older model sets a fixed `budget_tokens` value to control thinking. When you point it at a newest-generation model, the request returns a 400 error. What is the right update?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Raise `budget_tokens` to the minimum the newer model requires"
+      },
+      {
+        "id": "b",
+        "text": "Use adaptive thinking and tune its depth with the effort setting"
+      },
+      {
+        "id": "c",
+        "text": "Move the thinking budget into the system prompt as an instruction"
+      },
+      {
+        "id": "d",
+        "text": "Set `max_tokens` to the old budget so that thinking stays capped"
+      }
+    ],
+    "answer": "b",
+    "explain": "On current models the reasoning mode is adaptive thinking: the model decides when and how much to think, and you tune depth with an effort setting. The `budget_tokens` control is deprecated and returns a 400 error on the newest generations, so raising it does not help."
+  },
+  {
+    "id": "m1-09",
+    "topic": "Models & reasoning",
+    "q": "You use thinking on one of the newest Claude models to power a \"show the reasoning\" panel, but the responses contain no thinking text to display. What explains this, and what should you do?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Thinking did not run; raise the effort setting until it appears"
+      },
+      {
+        "id": "b",
+        "text": "Only the top tier exposes thinking; move the feature up a tier"
+      },
+      {
+        "id": "c",
+        "text": "Thinking appears only when streaming; switch from synchronous calls"
+      },
+      {
+        "id": "d",
+        "text": "Thinking content is omitted by default; request summarized display"
+      }
+    ],
+    "answer": "d",
+    "explain": "On the newest models, thinking content is omitted from responses by default, so you request summarized display when you need to show it. Its absence does not mean thinking failed to run, so raising effort would not make it appear."
+  },
+  {
+    "id": "m1-10",
+    "topic": "Prompting modes",
+    "q": "A zero-shot extraction prompt keeps returning dates in the wrong format with inconsistent field casing. You have already added two paragraphs describing the format, with no improvement. What is the most effective next step?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Raise the temperature so the model explores other output formats"
+      },
+      {
+        "id": "b",
+        "text": "Add a dozen varied examples so every possible input is covered"
+      },
+      {
+        "id": "c",
+        "text": "Add one or two correct input-output examples showing the shape"
+      },
+      {
+        "id": "d",
+        "text": "Rewrite the format instructions again using more forceful wording"
+      }
+    ],
+    "answer": "c",
+    "explain": "When a specific structure or casing keeps being missed, one or two correct examples usually fix it faster than more instructions, because they show the exact shape. Each example costs tokens on every call, so a dozen breaks the rule of adding the smallest prompt that produces a reliable result."
+  },
+  {
+    "id": "m1-11",
+    "topic": "Prompting modes",
+    "q": "Your eval shows a capable model gets a structured-output task right zero-shot, while a cheaper model misses the required structure. Cost matters. What should you try next?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Give the cheaper model a few examples and keep it if it meets the eval"
+      },
+      {
+        "id": "b",
+        "text": "Ship the capable model, since examples cannot change the output shape"
+      },
+      {
+        "id": "c",
+        "text": "Add examples to the capable model's prompt to make each call cheaper"
+      },
+      {
+        "id": "d",
+        "text": "Send the examples to the cheaper model once so it learns the new structure"
+      }
+    ],
+    "answer": "a",
+    "explain": "Prompting mode and model choice are related levers: a smaller model that fails zero-shot can often match the structure with a few examples, letting a cheaper model do the job. Examples are not training data; they sit in the prompt and must be sent on every call."
+  },
+  {
+    "id": "m1-12",
+    "topic": "Technical substrate",
+    "q": "A teammate proposes calling Claude's REST endpoint directly with a generic HTTP client instead of using the official Python SDK. Which statement is accurate?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The SDK uses a faster endpoint that also exposes newer models"
+      },
+      {
+        "id": "b",
+        "text": "Both reach the same API and model; the SDK cuts boilerplate"
+      },
+      {
+        "id": "c",
+        "text": "Raw REST cannot stream, so streaming features need the SDK"
+      },
+      {
+        "id": "d",
+        "text": "Raw REST skips SDK processing, so it returns better output"
+      }
+    ],
+    "answer": "b",
+    "explain": "The SDK is a thin convenience layer over the same REST API, handling authentication, request construction, retries and response parsing. Raw REST and the SDK reach the same API and the same model, and streaming runs over the same HTTP connection using server-sent events."
+  },
+  {
+    "id": "m1-13",
+    "topic": "Technical substrate",
+    "q": "Users of your writing assistant stare at a blank screen for several seconds while long drafts are generated, then the whole draft appears at once. Which change fits this problem?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Submit requests through the Message Batches API and poll for results"
+      },
+      {
+        "id": "b",
+        "text": "Switch to the async client so the complete draft comes back sooner"
+      },
+      {
+        "id": "c",
+        "text": "Lower the temperature so the model generates each draft faster"
+      },
+      {
+        "id": "d",
+        "text": "Stream the response so output appears as the model generates it"
+      }
+    ],
+    "answer": "d",
+    "explain": "When a response is long or a user is watching, streaming sends it in pieces over server-sent events so output appears immediately. An async client only frees your application thread while it waits; the user still waits for the complete response."
+  },
+  {
+    "id": "m1-14",
+    "topic": "Technical substrate",
+    "q": "You are porting a Python service that uses `AsyncAnthropic` for non-blocking concurrent calls over to TypeScript. What is the TypeScript equivalent?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Import the separate `AsyncAnthropic` class from the TypeScript SDK"
+      },
+      {
+        "id": "b",
+        "text": "Wrap each blocking SDK call in a worker thread to keep the service non-blocking"
+      },
+      {
+        "id": "c",
+        "text": "Use the standard `Anthropic` client and `await` its Promise-based calls"
+      },
+      {
+        "id": "d",
+        "text": "Use the Message Batches API, which serves as TypeScript's async client"
+      }
+    ],
+    "answer": "c",
+    "explain": "In the TypeScript SDK the standard `Anthropic` client is Promise-based, so you `await` calls directly; there is no separate async client class. The Message Batches API is a different pattern for bulk offline work, not a concurrency client."
+  },
+  {
+    "id": "m1-15",
+    "topic": "Technical substrate",
+    "q": "Every night your team runs an evaluation suite of 30,000 prompts. Nobody reviews the results until the next afternoon, and cost is the main concern. Which approach fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Submit them through the Message Batches API and poll for completion"
+      },
+      {
+        "id": "b",
+        "text": "Stream each response so results arrive as soon as they are generated"
+      },
+      {
+        "id": "c",
+        "text": "Use the async client to send all 30,000 requests concurrently"
+      },
+      {
+        "id": "d",
+        "text": "Pack all 30,000 prompts into one request with a large context"
+      }
+    ],
+    "answer": "a",
+    "explain": "The Message Batches API suits offline pipelines and eval runs where no user waits on each result: jobs can take up to 24 hours but run at a lower per-token cost. The async client gives non-blocking concurrency for real-time requests, but it does not bring the batch pattern's lower cost."
+  }
+]

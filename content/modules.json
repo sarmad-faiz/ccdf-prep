@@ -1,0 +1,32 @@
+[
+  {
+    "id": "m1",
+    "slug": "mso-foundations",
+    "title": "MSO Foundations",
+    "minutes": 57
+  },
+  {
+    "id": "m2",
+    "slug": "prompting-agents-tool-use",
+    "title": "Production-Grade Prompting, Agents & Tool Use",
+    "minutes": 209
+  },
+  {
+    "id": "m3",
+    "slug": "claude-code-mcp-integration",
+    "title": "Claude Code, MCP & Integration",
+    "minutes": 142
+  },
+  {
+    "id": "m4",
+    "slug": "production-evals-security",
+    "title": "Production Engineering, Evals & Security",
+    "minutes": 211
+  },
+  {
+    "id": "m5",
+    "slug": "accelerators-ip",
+    "title": "Accelerators & IP Contribution",
+    "minutes": 155
+  }
+]
