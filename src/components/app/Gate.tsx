@@ -1,9 +1,7 @@
 "use client";
-import { Turnstile } from "@marsidev/react-turnstile";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
+import { GuestStart } from "@/components/app/GuestStart";
 import { SignInForm } from "@/components/app/SignInForm";
-import { browserClient } from "@/lib/supabase/browser";
-import { TURNSTILE_SITE_KEY } from "@/lib/supabase/env";
 import { useSession, type SessionState } from "@/lib/useSession";
 
 type Ready = Extract<SessionState, { status: "ready" }>;
@@ -29,23 +27,7 @@ export function Gate({ children, next }: { children: ReactNode; next: string }) 
 }
 
 function GuestGate({ next }: { next: string }) {
-  const [showCaptcha, setShowCaptcha] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
-  const needsCaptcha = !!TURNSTILE_SITE_KEY;
   const title = next.startsWith("/exam") ? "Take a practice exam" : next.startsWith("/quiz") ? "Take a practice quiz" : "Start practising";
-
-  async function startAsGuest(captchaToken?: string) {
-    if (needsCaptcha && !captchaToken) return setShowCaptcha(true); // ask for the captcha only when needed
-    setBusy(true);
-    setError(undefined);
-    const { error } = await browserClient().auth.signInAnonymously({ options: { captchaToken } });
-    if (error) {
-      setError(error.message);
-      setBusy(false);
-    }
-  }
-
   return (
     <main className="page">
       <div className="card auth-card">
@@ -53,15 +35,8 @@ function GuestGate({ next }: { next: string }) {
         <p className="muted auth-sub">Sign in to save your progress on any device, or continue as a guest.</p>
         <SignInForm next={next} isGuest={false} />
         <div className="auth-divider" role="separator"><span>or</span></div>
-        {showCaptcha ? (
-          <div style={{ marginBottom: 10 }}>
-            <Turnstile siteKey={TURNSTILE_SITE_KEY} onSuccess={(t) => startAsGuest(t)} options={{ size: "flexible" }} />
-          </div>
-        ) : null}
-        <button className="btn block" onClick={() => startAsGuest()} disabled={busy}>
-          {busy ? "Starting…" : "Continue as guest"}
-        </button>
-        {error ? <p className="bad-text small" role="alert">{error}</p> : null}
+        {/* the session change re-renders <Gate> with the page itself */}
+        <GuestStart variant="button" />
         <p className="hint auth-legal">
           Guest progress stays on this browser and is deleted after 30 days without activity. Sign in any time to keep it.
         </p>

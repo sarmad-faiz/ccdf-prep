@@ -169,12 +169,31 @@ details.miss { margin-top: 12px; border-top: 1px dashed var(--border); padding-t
 details.miss summary { cursor: pointer; color: var(--bad); font-weight: 600; }
 
 /* chrome */
+/* header: one row on desktop [brand | nav | account]; two rows on phones [brand  account] / [nav tabs] */
 .site-header { border-bottom: 1px solid var(--border); background: var(--surface); }
-.site-header .inner { max-width: 760px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.site-header nav { display: flex; gap: 4px; flex-wrap: wrap; }
-.site-header nav a { text-decoration: none; padding: 6px 8px; border-radius: 6px; color: var(--muted); font-size: 14px; }
-.site-header nav a:hover { color: var(--text); background: var(--surface-2); }
-.brand { font-weight: 700; text-decoration: none; }
+.site-header .inner { max-width: 760px; margin: 0 auto; padding: 10px 16px; display: grid;
+  grid-template-columns: auto 1fr auto; grid-template-areas: "brand nav account"; align-items: center; gap: 12px; }
+.site-header .brand { grid-area: brand; font-weight: 700; text-decoration: none; }
+.site-nav { grid-area: nav; display: flex; gap: 2px; justify-content: flex-end; }
+.site-nav a { text-decoration: none; padding: 6px 10px; border-radius: 6px; color: var(--muted); font-size: 14px; white-space: nowrap; }
+.site-nav a:hover { color: var(--text); background: var(--surface-2); }
+.site-nav a.active { color: var(--text); background: var(--surface-2); font-weight: 600; }
+.site-nav .nav-short { display: none; }
+.site-account { grid-area: account; display: flex; justify-content: flex-end; min-width: 76px; }
+.auth-slot { display: inline-block; width: 76px; height: 30px; }
+.auth-btn { white-space: nowrap; }
+.auth-email { display: inline-block; max-width: 180px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+.guest-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: 2px; }
+@media (max-width: 640px) {
+  .site-header .inner { grid-template-columns: 1fr auto; grid-template-areas: "brand account" "nav nav"; row-gap: 8px; padding: 10px 16px 0; }
+  .site-nav { justify-content: stretch; gap: 0; margin: 0 -16px; padding: 0 8px; border-top: 1px solid var(--border); }
+  .site-nav a { flex: 1; text-align: center; padding: 10px 4px; border-radius: 0; font-size: 13.5px; border-bottom: 2px solid transparent; }
+  .site-nav a:hover { background: transparent; }
+  .site-nav a.active { background: transparent; color: var(--accent); border-bottom-color: var(--accent); }
+  .site-nav .nav-full { display: none; }
+  .site-nav .nav-short { display: inline; }
+  .auth-email { max-width: 130px; }
+}
 .site-footer { border-top: 1px solid var(--border); color: var(--muted); font-size: 12.5px; }
 .site-footer .inner { max-width: 760px; margin: 0 auto; padding: 18px 16px 28px; display: grid; gap: 6px; }
 .notice { border: 1px solid var(--accent); background: var(--sel-bg); border-radius: 12px; padding: 14px 16px; }
@@ -204,10 +223,13 @@ dialog.modal::backdrop { background: rgb(0 0 0 / .4); }
 .auth-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--muted); font-size: 12.5px; text-transform: uppercase; letter-spacing: .06em; }
 .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 .auth-legal { text-align: center; margin: 18px 0 0; }
+.guest-link { text-align: center; margin: 0; font-size: 14px; color: var(--muted); }
+.link-btn { border: 0; background: none; padding: 0; font: inherit; color: var(--accent); font-weight: 600; cursor: pointer; }
+.link-btn:hover { text-decoration: underline; text-underline-offset: 2px; }
+.link-btn:disabled { opacity: .6; cursor: default; }
 @media (max-width: 600px) { .auth-card { margin-top: 8px; padding: 22px 18px 18px; } }
 
 /* brand */
-.brand { text-decoration: none; }
 .brand-lockup { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; letter-spacing: -0.01em; }
 .brand-lockup b { font-weight: 750; letter-spacing: .02em; }
 .brand-light { font-weight: 500; color: var(--muted); }

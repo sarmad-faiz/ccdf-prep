@@ -1,11 +1,13 @@
 "use client";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { GuestStart } from "@/components/app/GuestStart";
 import { SignInForm } from "@/components/app/SignInForm";
 import { useSession } from "@/lib/useSession";
 
 export function Login() {
   const params = useSearchParams();
+  const router = useRouter();
   const next = (() => {
     const n = params.get("next");
     return n && n.startsWith("/") && !n.startsWith("//") ? n : "/dashboard";
@@ -44,6 +46,12 @@ export function Login() {
           </div>
         ) : null}
         <SignInForm next={next} isGuest={isGuest} googleMerge={googleMerge} initialError={params.get("error") ?? ""} />
+        {!isGuest ? (
+          <>
+            <div className="auth-divider" role="separator"><span>or</span></div>
+            <GuestStart variant="link" onStarted={() => router.replace(next)} />
+          </>
+        ) : null}
         <p className="hint auth-legal">
           By continuing you agree to the <Link href="/terms">terms</Link>. See <Link href="/privacy">privacy</Link> for what is stored.
         </p>

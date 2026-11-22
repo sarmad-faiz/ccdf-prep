@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AuthButton } from "@/components/AuthButton";
 import { Logo, SITE_NAME } from "@/components/Logo";
+import { NavLinks } from "@/components/NavLinks";
 import { getRelease } from "@/lib/content/queries";
 
 export const REPO_URL = "https://github.com/sarmad-faiz/ccdf-prep";
@@ -11,13 +12,8 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="inner">
         <Link href="/" className="brand" aria-label={`${SITE_NAME} home`}><Logo /></Link>
-        <nav aria-label="Main">
-          <Link href="/notes">Notes</Link>
-          <Link href="/exam-format">Exam format</Link>
-          <Link href="/dashboard">Practice</Link>
-          <Link href="/exam">Exams</Link>
-        </nav>
-        <AuthButton />
+        <NavLinks />
+        <div className="site-account"><AuthButton /></div>
       </div>
     </header>
   );
