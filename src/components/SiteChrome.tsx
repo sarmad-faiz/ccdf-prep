@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AuthButton } from "@/components/AuthButton";
 import { Logo, SITE_NAME } from "@/components/Logo";
-import { NavLinks } from "@/components/NavLinks";
+import { NavLinks, NavLinksView } from "@/components/NavLinks";
 import { getRelease } from "@/lib/content/queries";
 
 export const REPO_URL = "https://github.com/sarmad-faiz/ccdf-prep";
@@ -12,8 +12,15 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="inner">
         <Link href="/" className="brand" aria-label={`${SITE_NAME} home`}><Logo /></Link>
-        <NavLinks />
-        <div className="site-account"><AuthButton /></div>
+        {/* both read the URL, which must sit inside <Suspense> on dynamic routes */}
+        <Suspense fallback={<NavLinksView path="" />}>
+          <NavLinks />
+        </Suspense>
+        <div className="site-account">
+          <Suspense fallback={<span className="auth-slot" aria-hidden="true" />}>
+            <AuthButton />
+          </Suspense>
+        </div>
       </div>
     </header>
   );

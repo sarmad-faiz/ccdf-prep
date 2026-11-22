@@ -12,11 +12,15 @@ const LINKS = [
 ];
 
 export function NavLinks() {
-  const path = usePathname() ?? "/";
+  return <NavLinksView path={usePathname() ?? "/"} />;
+}
+
+// Also rendered without a path as the <Suspense> fallback (no active link until the URL is known).
+export function NavLinksView({ path }: { path: string }) {
   return (
     <nav aria-label="Main" className="site-nav">
       {LINKS.map((l) => {
-        const active = l.match(path);
+        const active = path ? l.match(path) : false;
         return (
           <Link key={l.href} href={l.href} aria-current={active ? "page" : undefined} className={active ? "active" : undefined}>
             <span className="nav-full">{l.label}</span>
