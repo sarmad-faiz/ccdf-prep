@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useReadySession } from "@/components/app/Gate";
 import { api } from "@/lib/api";
 import { browserClient } from "@/lib/supabase/browser";
+import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
 
 export function Account() {
   const router = useRouter();
@@ -12,10 +13,15 @@ export function Account() {
   const supabase = browserClient();
   const [providers, setProviders] = useState<string[]>([]);
   const [armed, setArmed] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     supabase.auth.getUserIdentities().then(({ data }) => setProviders((data?.identities ?? []).map((i) => i.provider)));
+    fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: SUPABASE_KEY } })
+      .then((r) => r.json())
+      .then((s) => setGoogleEnabled(!!s?.external?.google))
+      .catch(() => setGoogleEnabled(false));
   }, [supabase]);
 
   async function download() {
@@ -66,7 +72,7 @@ export function Account() {
           <>
             <b>Signed in as {s.email}</b>
             <p className="muted small">Sign-in methods: {providers.length ? providers.join(", ") : "email"}</p>
-            {!providers.includes("google") ? <button className="btn" onClick={linkGoogle}>Link Google</button> : null}
+            {googleEnabled && !providers.includes("google") ? <button className="btn" onClick={linkGoogle}>Link Google</button> : null}
           </>
         )}
       </div>

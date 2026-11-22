@@ -1,10 +1,10 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { Turnstile } from "@marsidev/react-turnstile";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { claimMerge, prepareMerge } from "@/app/actions/merge";
 import { browserClient } from "@/lib/supabase/browser";
-import { TURNSTILE_SITE_KEY } from "@/lib/supabase/env";
+import { SUPABASE_KEY, SUPABASE_URL, TURNSTILE_SITE_KEY } from "@/lib/supabase/env";
 
 type Mode = "signin" | "upgrade" | "merge";
 
@@ -27,14 +27,30 @@ export function SignInForm({
   const [code, setCode] = useState("");
   const [mode, setMode] = useState<Mode | null>(null);
   const [captcha, setCaptcha] = useState<string>();
-  const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<"email" | "verify" | "google" | null>(null);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
   const [error, setError] = useState(initialError);
+  const busy = pending !== null;
+
+  useEffect(() => {
+    // Show Google only when it's enabled in Supabase (public auth settings).
+    fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: SUPABASE_KEY } })
+      .then((r) => r.json())
+      .then((s) => setGoogleEnabled(!!s?.external?.google))
+      .catch(() => setGoogleEnabled(false));
+    // Coming back with the Back button (e.g. from Google) restores the page: reset the buttons.
+    const onShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setPending(null);
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
   const redirectTo = () => `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
 
   async function sendCode(e: React.FormEvent) {
     e.preventDefault();
     const supabase = browserClient();
-    setBusy(true);
+    setPending("email");
     setError("");
     try {
       if (isGuest) {
@@ -53,13 +69,13 @@ export function SignInForm({
     } catch (err) {
       setError((err as Error).message);
     } finally {
-      setBusy(false);
+      setPending(null);
     }
   }
 
   async function verify(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
+    setPending("verify");
     setError("");
     try {
       const { error } = await browserClient().auth.verifyOtp({
@@ -73,13 +89,13 @@ export function SignInForm({
       router.refresh();
     } catch (err) {
       setError((err as Error).message);
-      setBusy(false);
+      setPending(null);
     }
   }
 
   async function google() {
     const supabase = browserClient();
-    setBusy(true);
+    setPending("google");
     setError("");
     try {
       if (isGuest && !googleMerge) {
@@ -93,7 +109,7 @@ export function SignInForm({
       }
     } catch (err) {
       setError((err as Error).message);
-      setBusy(false);
+      setPending(null);
     }
   }
 
@@ -106,7 +122,7 @@ export function SignInForm({
             <input className="input code-input" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6,10}"
               maxLength={10} required autoFocus value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
           </label>
-          <button className="btn primary block" disabled={busy || code.length < 6}>{busy ? "Checking…" : "Verify and continue"}</button>
+          <button className="btn primary block" disabled={busy || code.length < 6}>{pending === "verify" ? "Checking…" : "Verify and continue"}</button>
           <button type="button" className="btn ghost block" onClick={() => { setMode(null); setCode(""); }}>
             Use a different email
           </button>
@@ -122,13 +138,15 @@ export function SignInForm({
             </label>
             {TURNSTILE_SITE_KEY ? <Turnstile siteKey={TURNSTILE_SITE_KEY} onSuccess={setCaptcha} options={{ size: "flexible" }} /> : null}
             <button className="btn primary block" disabled={busy || !email || (!!TURNSTILE_SITE_KEY && !captcha)}>
-              {busy ? "Sending…" : "Email me a code"}
+              {pending === "email" ? "Sending code…" : "Continue with email"}
             </button>
           </form>
-          <button type="button" className="btn block google-btn" style={{ marginTop: 10 }} onClick={google} disabled={busy}>
-            <GoogleIcon />
-            Continue with Google
-          </button>
+          {googleEnabled || googleMerge ? (
+            <button type="button" className="btn block google-btn" style={{ marginTop: 10 }} onClick={google} disabled={busy}>
+              <GoogleIcon />
+              {pending === "google" ? "Redirecting to Google…" : "Continue with Google"}
+            </button>
+          ) : null}
         </>
       )}
       {error ? <p className="bad-text small" role="alert" style={{ marginBottom: 0 }}>{error}</p> : null}
