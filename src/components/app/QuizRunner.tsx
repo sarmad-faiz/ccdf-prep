@@ -15,6 +15,8 @@ export function QuizRunner({ id }: { id: string }) {
   const [i, setI] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
+  const [pending, setPending] = useState<{ pos: number; choice: number } | null>(null); // answer being saved
+  const [answerError, setAnswerError] = useState<string>();
 
   useEffect(() => {
     api.getQuiz(id).then(
@@ -31,22 +33,37 @@ export function QuizRunner({ id }: { id: string }) {
   const item = quiz?.items[i];
   const revealed = !!item && item.correct_pos !== undefined;
 
+  const setItem = useCallback((pos: number, patch: (x: QuizItem) => QuizItem) => {
+    setQuiz((q) => (q ? { ...q, items: q.items.map((x) => (x.position === pos ? patch(x) : x)) } : q));
+  }, []);
+
+  // The pick shows at once; grading stays on the server, so instant mode waits for the result
+  // to reveal right/wrong. A slow save only gets a quiet pulse (CSS, after ~300ms).
   const pick = useCallback(
     async (choice: number) => {
-      if (!quiz || !item || busy || finished) return;
+      if (!quiz || !item || busy || pending || finished) return;
       if (quiz.feedback_mode === "instant" && item.chosen != null) return; // locked once revealed
-      setBusy(true);
+      const pos = item.position;
+      const before = item.chosen;
+      setAnswerError(undefined);
+      setPending({ pos, choice });
+      if (quiz.feedback_mode === "end") setItem(pos, (x) => ({ ...x, chosen: choice }));
       try {
-        const res = await api.answerQuiz(quiz.id, item.position, choice);
-        const updated: QuizItem = "stem" in res ? (res as QuizItem) : { ...item, chosen: choice };
-        setQuiz({ ...quiz, items: quiz.items.map((x) => (x.position === item.position ? updated : x)) });
+        const res = await api.answerQuiz(quiz.id, pos, choice);
+        setItem(pos, (x) => ("stem" in res ? (res as QuizItem) : { ...x, chosen: choice }));
       } catch (e) {
-        setError((e as Error).message);
+        setItem(pos, (x) => ({ ...x, chosen: before }));
+        const msg = (e as Error).message;
+        setAnswerError(
+          /failed to fetch|networkerror|load failed/i.test(msg)
+            ? "Couldn't save your answer. Check your connection and try again."
+            : `Couldn't save your answer: ${msg.replace(/\.$/, "")}. Try again.`,
+        );
       } finally {
-        setBusy(false);
+        setPending(null);
       }
     },
-    [quiz, item, busy, finished],
+    [quiz, item, busy, pending, finished, setItem],
   );
 
   const finish = useCallback(
@@ -70,10 +87,11 @@ export function QuizRunner({ id }: { id: string }) {
   );
 
   const next = useCallback(() => {
-    if (!quiz || !item || item.chosen == null) return;
+    if (!quiz || !item || item.chosen == null || pending) return;
+    setAnswerError(undefined);
     if (i < quiz.items.length - 1) setI(i + 1);
     else finish(true);
-  }, [quiz, item, i, finish]);
+  }, [quiz, item, i, pending, finish]);
 
   useEffect(() => {
     if (finished) return;
@@ -100,33 +118,36 @@ export function QuizRunner({ id }: { id: string }) {
 
   const n = quiz.items.length;
   const answeredHere = item.chosen != null;
+  const waiting = pending?.pos === item.position ? pending.choice : null; // option being saved here
   return (
     <main className="page">
       <div className="qtop">
-        <button className="btn ghost" onClick={() => finish(false)} disabled={busy}>← Dashboard</button>
+        <button className="btn ghost" onClick={() => finish(false)} disabled={busy || !!pending}>← Dashboard</button>
         <span className="muted">{quiz.title} · {i + 1} of {n}</span>
       </div>
       <div className="bar"><span style={{ width: `${(100 * (i + (answeredHere ? 1 : 0))) / n}%` }} /></div>
       <div className="card">
         {item.topic ? <span className="chip">{item.topic}</span> : null}
         <p className="qtext"><Inline text={item.stem} /></p>
-        <div className="opts" role="radiogroup">
+        <div className={waiting != null ? "opts waiting" : "opts"} role="radiogroup" aria-busy={waiting != null || undefined}>
           {item.options.map((text, k) => {
+            const chosen = waiting != null ? k === waiting : k === item.chosen;
             let cls = "opt";
             if (revealed) {
               cls += " locked";
               if (k === item.correct_pos) cls += " right";
               else if (k === item.chosen) cls += " wrong";
-            } else if (k === item.chosen) cls += " sel";
+            } else if (chosen) cls += waiting != null ? " sel pending" : " sel";
             return (
-              <button key={k} className={cls} role="radio" aria-checked={k === item.chosen} onClick={() => pick(k)}
-                aria-disabled={revealed || undefined}>
+              <button key={k} className={cls} role="radio" aria-checked={chosen} onClick={() => pick(k)}
+                aria-disabled={revealed || waiting != null || undefined}>
                 <span className="key">{KEYS[k]}</span>
                 <span><Inline text={text} /></span>
               </button>
             );
           })}
         </div>
+        {answerError ? <p className="bad-text small" role="alert">{answerError}</p> : null}
         {revealed ? (
           <div className={`explain ${item.correct ? "good" : "bad"}`}>
             <b>{item.correct ? "Correct." : "Not quite."}</b> <Inline text={item.explanation ?? ""} />
@@ -140,8 +161,10 @@ export function QuizRunner({ id }: { id: string }) {
       <div className="row between" style={{ marginTop: 14 }}>
         <span className="hint">Keys: A–D or 1–4 to answer, Enter for next</span>
         <div className="row">
-          {quiz.feedback_mode === "end" && i > 0 ? <button className="btn" onClick={() => setI(i - 1)}>Back</button> : null}
-          <button className="btn primary" onClick={next} disabled={!answeredHere || busy}>
+          {quiz.feedback_mode === "end" && i > 0 ? (
+            <button className="btn" onClick={() => { setAnswerError(undefined); setI(i - 1); }} disabled={!!pending}>Back</button>
+          ) : null}
+          <button className="btn primary" onClick={next} disabled={!answeredHere || busy || !!pending}>
             {i === n - 1 ? "Finish" : "Next"}
           </button>
         </div>
