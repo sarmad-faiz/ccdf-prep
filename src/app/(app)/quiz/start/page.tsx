@@ -10,14 +10,32 @@ function Starter() {
   const scope = params.get("scope") ?? "mixed";
   const retry = params.get("retry") ?? undefined;
   const [error, setError] = useState<string>();
-  const started = useRef(false);
+  // With cacheComponents, Next keeps this page mounted but hidden after navigating away, and
+  // re-runs the effect when it is shown again. So guard only the request in flight (dev Strict
+  // Mode runs the effect twice), not the page's lifetime, or the next visit would never start.
+  const inFlight = useRef<string | null>(null);
+  const visible = useRef(false);
   useEffect(() => {
-    if (started.current) return;
-    started.current = true;
+    visible.current = true;
+    const hide = () => {
+      visible.current = false;
+    };
+    const key = `${scope}|${retry ?? ""}`;
+    if (inFlight.current === key) return hide;
+    inFlight.current = key;
+    setError(undefined);
     api.startQuiz(scope, retry).then(
-      (q) => router.replace(`/quiz/${q.id}`),
-      (e: Error) => setError(e.message),
+      (q) => {
+        inFlight.current = null;
+        // don't pull the visitor back here if they left while the quiz was being created
+        if (visible.current) router.replace(`/quiz/${q.id}`);
+      },
+      (e: Error) => {
+        inFlight.current = null;
+        setError(e.message);
+      },
     );
+    return hide;
   }, [router, scope, retry]);
   return (
     <main className="page">

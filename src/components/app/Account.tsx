@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useReadySession } from "@/components/app/Gate";
 import { api } from "@/lib/api";
@@ -8,7 +7,6 @@ import { browserClient } from "@/lib/supabase/browser";
 import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
 
 export function Account() {
-  const router = useRouter();
   const s = useReadySession();
   const supabase = browserClient();
   const [providers, setProviders] = useState<string[]>([]);
@@ -34,9 +32,11 @@ export function Account() {
     URL.revokeObjectURL(a.href);
   }
 
+  // A full reload, not router.replace: with cacheComponents, pages visited earlier stay mounted
+  // (hidden) and would keep the previous user's data and keep calling the API with their session.
   async function signOut() {
     await supabase.auth.signOut();
-    router.replace("/");
+    window.location.replace("/");
   }
 
   async function remove() {
@@ -44,7 +44,7 @@ export function Account() {
     try {
       await api.deleteAccount();
       await supabase.auth.signOut({ scope: "local" }); // the user no longer exists on the server
-      router.replace("/");
+      window.location.replace("/");
     } catch (e) {
       setError((e as Error).message);
     }
