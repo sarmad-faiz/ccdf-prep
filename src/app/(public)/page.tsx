@@ -29,7 +29,7 @@ export default async function Home() {
             <div className="num">{i + 1}</div>
             <div>
               <div className="title">{m.title}</div>
-              <div className="meta">Free notes · {m.question_count} quiz questions</div>
+              <div className="meta">Short notes · {m.question_count} quiz questions</div>
             </div>
             <div className="row acts" style={{ flexWrap: "nowrap", gap: 8 }}>
               <Link className="btn" href={`/notes/${m.slug}`}>Notes</Link>
