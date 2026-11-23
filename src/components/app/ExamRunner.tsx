@@ -2,11 +2,14 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Inline } from "@/components/Inline";
+import { LoadError } from "@/components/app/LoadError";
 import { api, type ExamState } from "@/lib/api";
+import { saveErrorText } from "@/lib/errors";
 import { fmtClock } from "@/lib/format";
 
 type Live = Extract<ExamState, { status: "in_progress" }>;
 type Item = Live["items"][number];
+type SaveChange = Parameters<typeof api.saveExam>[1];
 const KEYS = "ABCDE";
 
 const isDone = (it: Item) => it.chosen.length === it.select_count;
@@ -21,12 +24,22 @@ export function ExamRunner({ id }: { id: string }) {
   const [hint, setHint] = useState("");
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string>();
+  const [inFlight, setInFlight] = useState(0); // saves queued or running
+  const [unsaved, setUnsaved] = useState(false); // some item's latest save failed
+  const [endState, setEndState] = useState<"idle" | "ending">("idle");
+  const [endError, setEndError] = useState<string>();
   const offset = useRef(0); // server clock minus local clock
   const ending = useRef(false);
+  const queue = useRef<Promise<void>>(Promise.resolve());
+  const failed = useRef(new Set<number>()); // positions whose latest save failed
+  const examRef = useRef<Live | undefined>(undefined);
+  useEffect(() => {
+    examRef.current = exam;
+  }, [exam]);
 
   const toResults = useCallback(() => router.replace(`/exam/${id}/results`), [router, id]);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     api.getExam(id).then(
       (e) => {
         if (e.status !== "in_progress") return toResults();
@@ -38,16 +51,75 @@ export function ExamRunner({ id }: { id: string }) {
       (err: Error) => setError(err.message),
     );
   }, [id, toResults]);
+  useEffect(load, [load]);
 
-  const end = useCallback(async () => {
-    if (ending.current) return;
-    ending.current = true;
-    try {
-      await api.submitExam(id);
-    } finally {
-      toResults();
+  // Saves go out one at a time, in the order they were made. The server keeps the last write,
+  // so two overlapping saves for one item could otherwise leave the older answer stored.
+  // Item saves always carry the item's full state, so any later success makes it whole again.
+  const save = useCallback(
+    (change: SaveChange) => {
+      setInFlight((n) => n + 1);
+      const run = async () => {
+        try {
+          const r = await api.saveExam(id, change);
+          if (change.position != null) failed.current.delete(change.position);
+          if (r.status !== "in_progress") toResults();
+        } catch (e) {
+          if (change.position != null) failed.current.add(change.position);
+          setHint(saveErrorText(e));
+        } finally {
+          setInFlight((n) => n - 1);
+          setUnsaved(failed.current.size > 0);
+        }
+      };
+      queue.current = queue.current.then(run);
+      return queue.current;
+    },
+    [id, toResults],
+  );
+
+  const retryFailed = useCallback(async () => {
+    const ex = examRef.current;
+    if (!ex) return;
+    for (const pos of [...failed.current]) {
+      const it = ex.items.find((x) => x.pos === pos);
+      if (it) save({ position: pos, chosen: it.chosen, flagged: it.flagged });
     }
-  }, [id, toResults]);
+    await queue.current;
+  }, [save]);
+
+  // Wait for every queued save, and give failed ones one more try.
+  const flush = useCallback(async () => {
+    await queue.current;
+    if (failed.current.size) await retryFailed();
+  }, [retryFailed]);
+
+  // auto: the timer ran out, so submit whatever is saved (the server would expire it anyway).
+  const end = useCallback(
+    async (auto: boolean) => {
+      if (ending.current) return;
+      ending.current = true;
+      setEndState("ending");
+      setEndError(undefined);
+      await flush();
+      if (!auto && failed.current.size) {
+        ending.current = false;
+        setEndState("idle");
+        setEndError("Some answers aren't saved yet. Check your connection, then end the exam again.");
+        return;
+      }
+      try {
+        await api.submitExam(id);
+        toResults();
+      } catch (e) {
+        if (auto) return toResults();
+        ending.current = false;
+        setEndState("idle");
+        setEndError(saveErrorText(e, "end the exam"));
+      }
+    },
+    [flush, id, toResults],
+  );
 
   // countdown against the server's deadline
   useEffect(() => {
@@ -55,24 +127,12 @@ export function ExamRunner({ id }: { id: string }) {
     const tick = () => {
       const ms = Date.parse(exam.ends_at) - (Date.now() + offset.current);
       setLeft(ms);
-      if (ms <= 0) end();
+      if (ms <= 0) end(true);
     };
     tick();
     const t = setInterval(tick, 1000);
     return () => clearInterval(t);
   }, [exam, end]);
-
-  const save = useCallback(
-    async (change: Parameters<typeof api.saveExam>[1]) => {
-      try {
-        const r = await api.saveExam(id, change);
-        if (r.status !== "in_progress") toResults();
-      } catch (e) {
-        setHint(`Couldn't save: ${(e as Error).message}`);
-      }
-    },
-    [id, toResults],
-  );
 
   const updateItem = useCallback((pos: number, patch: Partial<Item>) => {
     setExam((ex) => (ex ? { ...ex, items: ex.items.map((x) => (x.pos === pos ? { ...x, ...patch } : x)) } : ex));
@@ -104,7 +164,7 @@ export function ExamRunner({ id }: { id: string }) {
       }
       setHint("");
       updateItem(it.pos, { chosen: next });
-      save({ position: it.pos, chosen: next });
+      save({ position: it.pos, chosen: next, flagged: it.flagged });
     },
     [exam, i, updateItem, save],
   );
@@ -113,7 +173,7 @@ export function ExamRunner({ id }: { id: string }) {
     if (!exam) return;
     const it = exam.items[i];
     updateItem(it.pos, { flagged: !it.flagged });
-    save({ position: it.pos, flagged: !it.flagged });
+    save({ position: it.pos, chosen: it.chosen, flagged: !it.flagged });
   }, [exam, i, updateItem, save]);
 
   const next = useCallback(() => {
@@ -137,7 +197,13 @@ export function ExamRunner({ id }: { id: string }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [view, exam, i, pick, next, goto, flag]);
 
-  if (error) return <main className="page"><p className="bad-text">{error}</p></main>;
+  if (error) {
+    return (
+      <main className="page">
+        <LoadError message={error} onRetry={() => { setError(undefined); load(); }} back={{ href: "/exam", label: "Exams" }} />
+      </main>
+    );
+  }
   if (!exam) return <main className="page"><p className="muted">Loading exam…</p></main>;
 
   const n = exam.items.length;
@@ -147,6 +213,16 @@ export function ExamRunner({ id }: { id: string }) {
       <div className="clock">
         <span className="muted small">Time left</span>
         <span className={`timer ${left < 10 * 60e3 ? "low" : ""}`} role="timer">{fmtClock(left)}</span>
+        <span className="small" role="status">
+          {unsaved ? (
+            <span className="bad-text">
+              Not saved ·{" "}
+              <button type="button" className="link-btn" onClick={retryFailed} disabled={inFlight > 0}>Retry</button>
+            </span>
+          ) : inFlight > 0 ? (
+            <span className="muted save-status">Saving…</span>
+          ) : null}
+        </span>
       </div>
     </div>
   );
@@ -192,9 +268,12 @@ export function ExamRunner({ id }: { id: string }) {
               You can&apos;t change answers after this.
             </p>
             <div className="row">
-              <button className="btn primary" onClick={end}>End exam and see score</button>
-              <button className="btn" onClick={() => setConfirming(false)}>Keep working</button>
+              <button className="btn primary" onClick={() => end(false)} disabled={endState === "ending"}>
+                {endState === "ending" ? "Ending…" : "End exam and see score"}
+              </button>
+              <button className="btn" onClick={() => setConfirming(false)} disabled={endState === "ending"}>Keep working</button>
             </div>
+            {endError ? <p className="bad-text small" role="alert" style={{ marginBottom: 0 }}>{endError}</p> : null}
           </div>
         ) : null}
       </main>

@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Inline } from "@/components/Inline";
+import { LoadError } from "@/components/app/LoadError";
 import { ReportButton, StatsLine } from "@/components/app/ReportButton";
 import { SigninPrompt } from "@/components/app/SigninPrompt";
 import { api, pct, pctClass, type ExamResult } from "@/lib/api";
@@ -12,11 +13,18 @@ export function ExamResultView({ id }: { id: string }) {
   const [r, setR] = useState<ExamResult>();
   const [error, setError] = useState<string>();
   const [filter, setFilter] = useState<"missed" | "flagged" | "all">("missed");
-  useEffect(() => {
+  const load = useCallback(() => {
     api.examResult(id).then(setR, (e: Error) => setError(e.message));
   }, [id]);
+  useEffect(load, [load]);
 
-  if (error) return <main className="page"><p className="bad-text">{error}</p><Link className="btn" href="/exam">Exams</Link></main>;
+  if (error) {
+    return (
+      <main className="page">
+        <LoadError message={error} onRetry={() => { setError(undefined); load(); }} back={{ href: "/exam", label: "Exams" }} />
+      </main>
+    );
+  }
   if (!r) return <main className="page"><p className="muted">Loading results…</p></main>;
 
   const p = pct(r.correct, r.total);

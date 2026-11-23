@@ -4,8 +4,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Inline } from "@/components/Inline";
 import { ReportButton, StatsLine } from "@/components/app/ReportButton";
+import { LoadError } from "@/components/app/LoadError";
 import { SigninPrompt } from "@/components/app/SigninPrompt";
 import { api, pct, pctClass, type Quiz, type QuizItem } from "@/lib/api";
+import { saveErrorText } from "@/lib/errors";
 
 const KEYS = "ABCD";
 
@@ -13,12 +15,13 @@ export function QuizRunner({ id }: { id: string }) {
   const router = useRouter();
   const [quiz, setQuiz] = useState<Quiz>();
   const [i, setI] = useState(0);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
+  const [finishing, setFinishing] = useState<"complete" | "leave" | null>(null);
+  const [error, setError] = useState<string>(); // the quiz failed to load
   const [pending, setPending] = useState<{ pos: number; choice: number } | null>(null); // answer being saved
   const [answerError, setAnswerError] = useState<string>();
+  const [finishError, setFinishError] = useState<string>();
 
-  useEffect(() => {
+  const load = useCallback(() => {
     api.getQuiz(id).then(
       (q) => {
         setQuiz(q);
@@ -28,6 +31,7 @@ export function QuizRunner({ id }: { id: string }) {
       (e: Error) => setError(e.message),
     );
   }, [id]);
+  useEffect(load, [load]);
 
   const finished = quiz && quiz.status !== "in_progress";
   const item = quiz?.items[i];
@@ -41,7 +45,7 @@ export function QuizRunner({ id }: { id: string }) {
   // to reveal right/wrong. A slow save only gets a quiet pulse (CSS, after ~300ms).
   const pick = useCallback(
     async (choice: number) => {
-      if (!quiz || !item || busy || pending || finished) return;
+      if (!quiz || !item || finishing || pending || finished) return;
       if (quiz.feedback_mode === "instant" && item.chosen != null) return; // locked once revealed
       const pos = item.position;
       const before = item.chosen;
@@ -53,23 +57,19 @@ export function QuizRunner({ id }: { id: string }) {
         setItem(pos, (x) => ("stem" in res ? (res as QuizItem) : { ...x, chosen: choice }));
       } catch (e) {
         setItem(pos, (x) => ({ ...x, chosen: before }));
-        const msg = (e as Error).message;
-        setAnswerError(
-          /failed to fetch|networkerror|load failed/i.test(msg)
-            ? "Couldn't save your answer. Check your connection and try again."
-            : `Couldn't save your answer: ${msg.replace(/\.$/, "")}. Try again.`,
-        );
+        setAnswerError(saveErrorText(e, "save your answer"));
       } finally {
         setPending(null);
       }
     },
-    [quiz, item, busy, pending, finished, setItem],
+    [quiz, item, finishing, pending, finished, setItem],
   );
 
   const finish = useCallback(
     async (completed: boolean) => {
-      if (!quiz) return;
-      setBusy(true);
+      if (!quiz || finishing) return;
+      setFinishing(completed ? "complete" : "leave");
+      setFinishError(undefined);
       try {
         const res = await api.finishQuiz(quiz.id, completed);
         if (!completed || "deleted" in res) router.push("/dashboard");
@@ -78,17 +78,18 @@ export function QuizRunner({ id }: { id: string }) {
           window.scrollTo(0, 0);
         }
       } catch (e) {
-        setError((e as Error).message);
+        setFinishError(saveErrorText(e, completed ? "finish the quiz" : "leave the quiz"));
       } finally {
-        setBusy(false);
+        setFinishing(null);
       }
     },
-    [quiz, router],
+    [quiz, finishing, router],
   );
 
   const next = useCallback(() => {
     if (!quiz || !item || item.chosen == null || pending) return;
     setAnswerError(undefined);
+    setFinishError(undefined);
     if (i < quiz.items.length - 1) setI(i + 1);
     else finish(true);
   }, [quiz, item, i, pending, finish]);
@@ -112,7 +113,13 @@ export function QuizRunner({ id }: { id: string }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [finished, item, pick, next]);
 
-  if (error) return <main className="page"><p className="bad-text">{error}</p><Link className="btn" href="/dashboard">Dashboard</Link></main>;
+  if (error) {
+    return (
+      <main className="page">
+        <LoadError message={error} onRetry={() => { setError(undefined); load(); }} back={{ href: "/dashboard", label: "Dashboard" }} />
+      </main>
+    );
+  }
   if (!quiz || !item) return <main className="page"><p className="muted">Loading quiz…</p></main>;
   if (finished) return <QuizResults quiz={quiz} />;
 
@@ -122,7 +129,9 @@ export function QuizRunner({ id }: { id: string }) {
   return (
     <main className="page">
       <div className="qtop">
-        <button className="btn ghost" onClick={() => finish(false)} disabled={busy || !!pending}>← Dashboard</button>
+        <button className="btn ghost" onClick={() => finish(false)} disabled={!!finishing || !!pending}>
+          {finishing === "leave" ? "Leaving…" : "← Dashboard"}
+        </button>
         <span className="muted">{quiz.title} · {i + 1} of {n}</span>
       </div>
       <div className="bar"><span style={{ width: `${(100 * (i + (answeredHere ? 1 : 0))) / n}%` }} /></div>
@@ -162,13 +171,15 @@ export function QuizRunner({ id }: { id: string }) {
         <span className="hint">Keys: A–D or 1–4 to answer, Enter for next</span>
         <div className="row">
           {quiz.feedback_mode === "end" && i > 0 ? (
-            <button className="btn" onClick={() => { setAnswerError(undefined); setI(i - 1); }} disabled={!!pending}>Back</button>
+            <button className="btn" onClick={() => { setAnswerError(undefined); setFinishError(undefined); setI(i - 1); }}
+              disabled={!!pending || !!finishing}>Back</button>
           ) : null}
-          <button className="btn primary" onClick={next} disabled={!answeredHere || busy || !!pending}>
-            {i === n - 1 ? "Finish" : "Next"}
+          <button className="btn primary" onClick={next} disabled={!answeredHere || !!finishing || !!pending}>
+            {finishing === "complete" ? "Finishing…" : i === n - 1 ? "Finish" : "Next"}
           </button>
         </div>
       </div>
+      {finishError ? <p className="bad-text small" role="alert" style={{ textAlign: "right" }}>{finishError}</p> : null}
     </main>
   );
 }

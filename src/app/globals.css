@@ -142,6 +142,10 @@ input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; }
 .exam-bar .clock { display: flex; flex-direction: column; align-items: flex-end; }
 .timer { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .timer.low { color: var(--bad); }
+/* "Saving…" only appears when a save takes longer than ~0.5s, so quick saves never flash it */
+.save-status { opacity: 0; animation: save-in .2s ease .5s forwards; }
+@keyframes save-in { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .save-status { animation-duration: 0s; } }
 .flagbtn[aria-pressed=true] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
 .exam-nav { margin-top: 14px; display: flex; justify-content: space-between; gap: 8px; }
 .rgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin-top: 14px; }

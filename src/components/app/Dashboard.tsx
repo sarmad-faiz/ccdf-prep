@@ -1,10 +1,15 @@
 "use client";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ExamCard } from "@/components/app/ExamCard";
 import { useReadySession } from "@/components/app/Gate";
-import { api, pct, pctClass, type Dashboard as Data } from "@/lib/api";
+import { LoadError } from "@/components/app/LoadError";
+import { api, friendlyError, pct, pctClass, type Dashboard as Data } from "@/lib/api";
+import { saveErrorText } from "@/lib/errors";
 import { browserClient } from "@/lib/supabase/browser";
+
+type Profile = Data["profile"];
+type Todo = Data["todos"][number];
 
 function daysUntil(iso: string) {
   const [y, m, d] = iso.split("-").map(Number);
@@ -15,20 +20,37 @@ function daysUntil(iso: string) {
 export function useDashboard() {
   const [data, setData] = useState<Data>();
   const [error, setError] = useState<string>();
+  const loaded = useRef(false);
+  // A failed background refresh keeps the dashboard already shown; only a first load shows the error.
   const reload = useCallback(() => {
-    api.dashboard().then(setData, (e: Error) => setError(e.message));
+    api.dashboard().then(
+      (d) => {
+        loaded.current = true;
+        setData(d);
+      },
+      (e: Error) => {
+        if (!loaded.current) setError(e.message);
+      },
+    );
   }, []);
   useEffect(reload, [reload]);
-  return { data, error, reload, setData };
+  const retry = useCallback(() => {
+    setError(undefined);
+    reload();
+  }, [reload]);
+  return { data, error, reload, retry, setData };
 }
 
 export function Dashboard() {
   const session = useReadySession();
-  const { data: d, error, reload, setData } = useDashboard();
+  const { data: d, error, reload, retry, setData } = useDashboard();
   const [newTodo, setNewTodo] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [settingsError, setSettingsError] = useState<{ where: "date" | "mode"; text: string }>();
+  const [todoError, setTodoError] = useState<string>();
   const db = browserClient();
 
-  if (error) return <main className="page"><p className="bad-text">{error}</p></main>;
+  if (error) return <main className="page"><LoadError message={error} onRetry={retry} /></main>;
   if (!d) return <main className="page"><p className="muted">Loading your dashboard…</p></main>;
 
   const days = d.profile.exam_date ? daysUntil(d.profile.exam_date) : null;
@@ -51,9 +73,60 @@ export function Dashboard() {
   const bestExam = setBests.length ? Math.max(...setBests) : null;
   const perSet = d.exam.sets.map((x) => `${x.id} ${x.best ?? "—"}`).join(" · ");
 
-  const update = async (fields: Record<string, unknown>) => {
-    await db.from("profiles").update(fields).eq("user_id", uid);
-    reload();
+  // Settings and to-dos change on screen at once and roll back if the save fails.
+  const setProfile = (fields: Partial<Profile>) =>
+    setData((x) => (x ? { ...x, profile: { ...x.profile, ...fields } } : x));
+  const setTodos = (fn: (todos: Todo[]) => Todo[]) => setData((x) => (x ? { ...x, todos: fn(x.todos) } : x));
+
+  const update = async (where: "date" | "mode", fields: Partial<Profile>) => {
+    const before = Object.fromEntries(Object.keys(fields).map((k) => [k, d.profile[k as keyof Profile]])) as Partial<Profile>;
+    setSettingsError(undefined);
+    setProfile(fields);
+    const { error } = await db.from("profiles").update(fields).eq("user_id", uid);
+    if (error) {
+      setProfile(before);
+      setSettingsError({ where, text: saveErrorText(error.message, "save that setting") });
+    }
+  };
+
+  const toggleTodo = async (t: Todo, done: boolean) => {
+    setTodoError(undefined);
+    setTodos((ts) => ts.map((x) => (x.id === t.id ? { ...x, done } : x)));
+    const { error } = await db.from("todos").update({ done }).eq("id", t.id);
+    if (error) {
+      setTodos((ts) => ts.map((x) => (x.id === t.id ? { ...x, done: !done } : x)));
+      setTodoError(saveErrorText(error.message, "update that to-do"));
+    }
+  };
+
+  const deleteTodo = async (t: Todo) => {
+    const at = d.todos.findIndex((x) => x.id === t.id);
+    setTodoError(undefined);
+    setTodos((ts) => ts.filter((x) => x.id !== t.id));
+    const { error } = await db.from("todos").delete().eq("id", t.id);
+    if (error) {
+      setTodos((ts) => [...ts.slice(0, at), t, ...ts.slice(at)]);
+      setTodoError(saveErrorText(error.message, "delete that to-do"));
+    }
+  };
+
+  const addTodo = async (label: string) => {
+    setAdding(true);
+    setTodoError(undefined);
+    const { data: row, error } = await db
+      .from("todos")
+      .insert({ label, position: d.todos.length })
+      .select("id, label, done")
+      .single();
+    setAdding(false);
+    if (error || !row) {
+      const msg = error?.message ?? "";
+      const friendly = friendlyError(msg);
+      setTodoError(friendly !== msg ? friendly : saveErrorText(msg, "add that to-do"));
+      return;
+    }
+    setTodos((ts) => [...ts, row as Todo]);
+    setNewTodo("");
   };
 
   return (
@@ -77,10 +150,11 @@ export function Dashboard() {
             className="input"
             type="date"
             value={d.profile.exam_date ?? ""}
-            onChange={(e) => update({ exam_date: e.target.value || null })}
+            onChange={(e) => update("date", { exam_date: e.target.value || null })}
           />
         </label>
       </header>
+      {settingsError?.where === "date" ? <p className="bad-text small" role="alert">{settingsError.text}</p> : null}
 
       <section className="stats">
         <label className="stat hot" htmlFor="exam-date" title="Set your exam date">
@@ -193,14 +267,15 @@ export function Dashboard() {
         <div className="row">
           <span className="muted small">Show answers</span>
           <div className="seg" role="group" aria-label="When to show answers">
-            <button aria-pressed={d.profile.feedback_mode === "instant"} onClick={() => update({ feedback_mode: "instant" })}>
+            <button aria-pressed={d.profile.feedback_mode === "instant"} onClick={() => update("mode", { feedback_mode: "instant" })}>
               After each question
             </button>
-            <button aria-pressed={d.profile.feedback_mode === "end"} onClick={() => update({ feedback_mode: "end" })}>
+            <button aria-pressed={d.profile.feedback_mode === "end"} onClick={() => update("mode", { feedback_mode: "end" })}>
               At the end (exam style)
             </button>
           </div>
         </div>
+        {settingsError?.where === "mode" ? <p className="bad-text small" role="alert">{settingsError.text}</p> : null}
         <div className="row" style={{ marginTop: 12 }}>
           {d.results.mistakes ? (
             <Link className="btn primary" href="/quiz/start?scope=mistakes">Review mistakes ({d.results.mistakes})</Link>
@@ -219,23 +294,11 @@ export function Dashboard() {
               <input
                 type="checkbox"
                 checked={t.done}
-                onChange={async (e) => {
-                  const done = e.target.checked;
-                  setData({ ...d, todos: d.todos.map((x) => (x.id === t.id ? { ...x, done } : x)) }); // optimistic
-                  await db.from("todos").update({ done }).eq("id", t.id);
-                  reload();
-                }}
+                onChange={(e) => toggleTodo(t, e.target.checked)}
               />
               <span>{t.label}</span>
             </label>
-            <button
-              className="btn ghost small"
-              aria-label={`Delete "${t.label}"`}
-              onClick={async () => {
-                await db.from("todos").delete().eq("id", t.id);
-                reload();
-              }}
-            >
+            <button className="btn ghost small" aria-label={`Delete "${t.label}"`} onClick={() => deleteTodo(t)}>
               ✕
             </button>
           </div>
@@ -243,19 +306,17 @@ export function Dashboard() {
         <form
           className="row"
           style={{ marginTop: 8, flexWrap: "nowrap" }}
-          onSubmit={async (e) => {
+          onSubmit={(e) => {
             e.preventDefault();
             const label = newTodo.trim();
-            if (!label) return;
-            await db.from("todos").insert({ label, position: d.todos.length });
-            setNewTodo("");
-            reload();
+            if (label && !adding) addTodo(label);
           }}
         >
           <input className="input" style={{ flex: 1 }} maxLength={200} placeholder="Add a to-do" value={newTodo}
             onChange={(e) => setNewTodo(e.target.value)} aria-label="New to-do" />
-          <button className="btn" type="submit">Add</button>
+          <button className="btn" type="submit" disabled={adding}>{adding ? "Adding…" : "Add"}</button>
         </form>
+        {todoError ? <p className="bad-text small" role="alert" style={{ marginBottom: 0 }}>{todoError}</p> : null}
       </div>
 
       <h2 className="section">Recent attempts</h2>

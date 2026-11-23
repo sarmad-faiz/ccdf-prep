@@ -2,10 +2,11 @@
 import { ExamCard } from "@/components/app/ExamCard";
 import { useDashboard } from "@/components/app/Dashboard";
 import { Gate } from "@/components/app/Gate";
+import { LoadError } from "@/components/app/LoadError";
 
 function Hub() {
-  const { data, error, reload } = useDashboard();
-  if (error) return <p className="bad-text">{error}</p>;
+  const { data, error, reload, retry } = useDashboard();
+  if (error) return <LoadError message={error} onRetry={retry} />;
   if (!data) return <p className="muted">Loading…</p>;
   return <ExamCard d={data} reload={reload} />;
 }
